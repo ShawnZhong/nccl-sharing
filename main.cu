@@ -39,7 +39,7 @@ int main(int argc, char *argv[]) {
 
     //managing 2 devices
     int nDev = 2;
-    size_t comp_size = 20 * 1024;
+    size_t comp_size = 50 * 1024;
     int nccl_size = 10 * 1024 * 1024;
     int devs[2] = {0, 1};
     int num_threads = 1024;
@@ -57,9 +57,6 @@ int main(int argc, char *argv[]) {
         CUDACHECK(cudaStreamCreate(&nccl_streams[i]));
         CUDACHECK(cudaStreamCreate(&comp_streams[i]));
     }
-
-    setenv("NCCL_MAX_NRINGS", "1", 1);
-    setenv("NCCL_MIN_NRINGS", "1", 1);
 
     //initializing NCCL
     NCCLCHECK(ncclCommInitAll(comms, nDev, devs));
