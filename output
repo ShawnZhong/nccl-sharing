@@ -1,0 +1,265 @@
+make: Entering directory '/users/szhong/nccl-sched/nccl'
+make -C src build BUILDDIR=/users/szhong/nccl-sched/nccl/build
+make[1]: Entering directory '/users/szhong/nccl-sched/nccl/src'
+make[2]: Entering directory '/users/szhong/nccl-sched/nccl/src/collectives/device'
+make[2]: Leaving directory '/users/szhong/nccl-sched/nccl/src/collectives/device'
+make[1]: Leaving directory '/users/szhong/nccl-sched/nccl/src'
+make: Leaving directory '/users/szhong/nccl-sched/nccl'
+-- Configuring done
+-- Generating done
+-- Build files have been written to: /users/szhong/nccl-sched/build
+[100%] Built target nccl_test
+node0:352775:352775 [1] NCCL INFO Bootstrap : Using eno1:130.127.134.34<0>
+node0:352775:352775 [1] NCCL INFO NET/Plugin : No plugin found (libnccl-net.so), using internal implementation
+node0:352775:352775 [1] NCCL INFO Failed to open libibverbs.so[.1]
+node0:352775:352775 [1] NCCL INFO NET/Socket : Using [0]eno1:130.127.134.34<0>
+node0:352775:352775 [1] NCCL INFO Using network Socket
+NCCL version 2.12.10sz+cuda11.6
+node0:352775:352786 [1] NCCL INFO NCCL_P2P_LEVEL set by environment to LOC
+node0:352775:352785 [0] NCCL INFO NCCL_P2P_LEVEL set by environment to LOC
+node0:352775:352786 [1] NCCL INFO === System : maxWidth 12.0 totalWidth 12.0 ===
+node0:352775:352785 [0] NCCL INFO === System : maxWidth 12.0 totalWidth 12.0 ===
+node0:352775:352785 [0] NCCL INFO CPU/0 (1/2/-1)
+node0:352775:352786 [1] NCCL INFO CPU/0 (1/2/-1)
+node0:352775:352785 [0] NCCL INFO + SYS[5000.0] - CPU/1
+node0:352775:352785 [0] NCCL INFO + PCI[12.0] - GPU/21000 (0)
+node0:352775:352786 [1] NCCL INFO + SYS[5000.0] - CPU/1
+node0:352775:352785 [0] NCCL INFO CPU/1 (1/2/-1)
+node0:352775:352785 [0] NCCL INFO + SYS[5000.0] - CPU/0
+node0:352775:352785 [0] NCCL INFO + PCI[12.0] - GPU/E2000 (1)
+node0:352775:352786 [1] NCCL INFO + PCI[12.0] - GPU/21000 (0)
+node0:352775:352785 [0] NCCL INFO + PCI[0.4] - NIC/E1000
+node0:352775:352785 [0] NCCL INFO ==========================================
+node0:352775:352786 [1] NCCL INFO CPU/1 (1/2/-1)
+node0:352775:352785 [0] NCCL INFO GPU/21000 :GPU/21000 (0/5000.000000/LOC) GPU/E2000 (3/12.000000/SYS) CPU/0 (1/12.000000/PHB) CPU/1 (2/12.000000/SYS) 
+node0:352775:352786 [1] NCCL INFO + SYS[5000.0] - CPU/0
+node0:352775:352785 [0] NCCL INFO GPU/E2000 :GPU/21000 (3/12.000000/SYS) GPU/E2000 (0/5000.000000/LOC) CPU/0 (2/12.000000/SYS) CPU/1 (1/12.000000/PHB) 
+node0:352775:352786 [1] NCCL INFO + PCI[12.0] - GPU/E2000 (1)
+node0:352775:352786 [1] NCCL INFO + PCI[0.4] - NIC/E1000
+node0:352775:352786 [1] NCCL INFO ==========================================
+node0:352775:352785 [0] NCCL INFO Setting affinity for GPU 0 to ffffffff,00000000,ffffffff
+node0:352775:352786 [1] NCCL INFO GPU/21000 :GPU/21000 (0/5000.000000/LOC) GPU/E2000 (3/12.000000/SYS) CPU/0 (1/12.000000/PHB) CPU/1 (2/12.000000/SYS) 
+node0:352775:352786 [1] NCCL INFO GPU/E2000 :GPU/21000 (3/12.000000/SYS) GPU/E2000 (0/5000.000000/LOC) CPU/0 (2/12.000000/SYS) CPU/1 (1/12.000000/PHB) 
+node0:352775:352786 [1] NCCL INFO Setting affinity for GPU 1 to ffffffff,00000000,ffffffff,00000000
+node0:352775:352786 [1] NCCL INFO Pattern 4, crossNic 0, nChannels 1, speed 12.000000/12.000000, type SYS/PIX, sameChannels 1
+node0:352775:352786 [1] NCCL INFO  0 : GPU/0 GPU/1
+node0:352775:352786 [1] NCCL INFO Pattern 1, crossNic 0, nChannels 1, speed 12.000000/12.000000, type SYS/PIX, sameChannels 1
+node0:352775:352786 [1] NCCL INFO  0 : GPU/0 GPU/1
+node0:352775:352786 [1] NCCL INFO Pattern 3, crossNic 0, nChannels 1, speed 12.000000/12.000000, type SYS/PIX, sameChannels 1
+node0:352775:352786 [1] NCCL INFO  0 : GPU/0 GPU/1
+node0:352775:352785 [0] NCCL INFO Pattern 4, crossNic 0, nChannels 1, speed 12.000000/12.000000, type SYS/PIX, sameChannels 1
+node0:352775:352785 [0] NCCL INFO  0 : GPU/0 GPU/1
+node0:352775:352785 [0] NCCL INFO Pattern 1, crossNic 0, nChannels 1, speed 12.000000/12.000000, type SYS/PIX, sameChannels 1
+node0:352775:352785 [0] NCCL INFO  0 : GPU/0 GPU/1
+node0:352775:352785 [0] NCCL INFO Pattern 3, crossNic 0, nChannels 1, speed 12.000000/12.000000, type SYS/PIX, sameChannels 1
+node0:352775:352785 [0] NCCL INFO  0 : GPU/0 GPU/1
+node0:352775:352786 [1] NCCL INFO Tree 0 : 0 -> 1 -> -1/-1/-1
+node0:352775:352786 [1] NCCL INFO Tree 1 : 0 -> 1 -> -1/-1/-1
+node0:352775:352785 [0] NCCL INFO Tree 0 : -1 -> 0 -> 1/-1/-1
+node0:352775:352785 [0] NCCL INFO Tree 1 : -1 -> 0 -> 1/-1/-1
+node0:352775:352786 [1] NCCL INFO NCCL_MIN_NCHANNELS set by environment to 8.
+node0:352775:352786 [1] NCCL INFO Ring 00 : 0 -> 1 -> 0
+node0:352775:352786 [1] NCCL INFO Ring 01 : 0 -> 1 -> 0
+node0:352775:352786 [1] NCCL INFO Ring 02 : 0 -> 1 -> 0
+node0:352775:352785 [0] NCCL INFO Channel 00/08 :    0   1
+node0:352775:352785 [0] NCCL INFO Channel 01/08 :    0   1
+node0:352775:352785 [0] NCCL INFO Channel 02/08 :    0   1
+node0:352775:352785 [0] NCCL INFO Channel 03/08 :    0   1
+node0:352775:352785 [0] NCCL INFO Channel 04/08 :    0   1
+node0:352775:352785 [0] NCCL INFO Channel 05/08 :    0   1
+node0:352775:352785 [0] NCCL INFO Channel 06/08 :    0   1
+node0:352775:352785 [0] NCCL INFO Channel 07/08 :    0   1
+node0:352775:352786 [1] NCCL INFO Ring 03 : 0 -> 1 -> 0
+node0:352775:352786 [1] NCCL INFO Ring 04 : 0 -> 1 -> 0
+node0:352775:352785 [0] NCCL INFO Ring 00 : 1 -> 0 -> 1
+node0:352775:352786 [1] NCCL INFO Ring 05 : 0 -> 1 -> 0
+node0:352775:352786 [1] NCCL INFO Ring 06 : 0 -> 1 -> 0
+node0:352775:352785 [0] NCCL INFO Ring 01 : 1 -> 0 -> 1
+node0:352775:352786 [1] NCCL INFO Ring 07 : 0 -> 1 -> 0
+node0:352775:352786 [1] NCCL INFO Trees [0] -1/-1/-1->1->0 [1] -1/-1/-1->1->0 [2] -1/-1/-1->1->0 [3] -1/-1/-1->1->0 [4] -1/-1/-1->1->0 [5] -1/-1/-1->1->0 [6] -1/-1/-1->1->0 [7] -1/-1/-1->1->0
+node0:352775:352785 [0] NCCL INFO Ring 02 : 1 -> 0 -> 1
+node0:352775:352785 [0] NCCL INFO Ring 03 : 1 -> 0 -> 1
+node0:352775:352785 [0] NCCL INFO Ring 04 : 1 -> 0 -> 1
+node0:352775:352785 [0] NCCL INFO Ring 05 : 1 -> 0 -> 1
+node0:352775:352785 [0] NCCL INFO Ring 06 : 1 -> 0 -> 1
+node0:352775:352785 [0] NCCL INFO Ring 07 : 1 -> 0 -> 1
+node0:352775:352785 [0] NCCL INFO Trees [0] 1/-1/-1->0->-1 [1] 1/-1/-1->0->-1 [2] 1/-1/-1->0->-1 [3] 1/-1/-1->0->-1 [4] 1/-1/-1->0->-1 [5] 1/-1/-1->0->-1 [6] 1/-1/-1->0->-1 [7] 1/-1/-1->0->-1
+node0:352775:352786 [1] NCCL INFO Channel 00 : 1[e2000] -> 0[21000] via direct shared memory
+node0:352775:352786 [1] NCCL INFO Channel 01 : 1[e2000] -> 0[21000] via direct shared memory
+node0:352775:352786 [1] NCCL INFO Channel 02 : 1[e2000] -> 0[21000] via direct shared memory
+node0:352775:352786 [1] NCCL INFO Channel 03 : 1[e2000] -> 0[21000] via direct shared memory
+node0:352775:352786 [1] NCCL INFO Channel 04 : 1[e2000] -> 0[21000] via direct shared memory
+node0:352775:352786 [1] NCCL INFO Channel 05 : 1[e2000] -> 0[21000] via direct shared memory
+node0:352775:352786 [1] NCCL INFO Channel 06 : 1[e2000] -> 0[21000] via direct shared memory
+node0:352775:352786 [1] NCCL INFO Channel 07 : 1[e2000] -> 0[21000] via direct shared memory
+node0:352775:352785 [0] NCCL INFO Channel 00 : 0[21000] -> 1[e2000] via direct shared memory
+node0:352775:352785 [0] NCCL INFO Channel 01 : 0[21000] -> 1[e2000] via direct shared memory
+node0:352775:352785 [0] NCCL INFO Channel 02 : 0[21000] -> 1[e2000] via direct shared memory
+node0:352775:352785 [0] NCCL INFO Channel 03 : 0[21000] -> 1[e2000] via direct shared memory
+node0:352775:352785 [0] NCCL INFO Channel 04 : 0[21000] -> 1[e2000] via direct shared memory
+node0:352775:352785 [0] NCCL INFO Channel 05 : 0[21000] -> 1[e2000] via direct shared memory
+node0:352775:352785 [0] NCCL INFO Channel 06 : 0[21000] -> 1[e2000] via direct shared memory
+node0:352775:352785 [0] NCCL INFO Channel 07 : 0[21000] -> 1[e2000] via direct shared memory
+node0:352775:352785 [0] NCCL INFO Connected all rings
+node0:352775:352785 [0] NCCL INFO Connected all trees
+node0:352775:352785 [0] NCCL INFO Latency/AlgBw |    Tree/    LL |    Tree/ LL128 |    Tree/Simple |    Ring/    LL |    Ring/ LL128 |    Ring/Simple | CollNet/    LL | CollNet/ LL128 | CollNet/Simple |
+node0:352775:352785 [0] NCCL INFO  Max NThreads |            512 |            640 |            512 |            512 |            640 |            256 |            512 |            640 |            512 |
+node0:352775:352785 [0] NCCL INFO     Broadcast |     0.0/   0.0 |     0.0/   0.0 |     0.0/   0.0 |     4.6/   4.0 |    12.5/   0.0 |    14.1/  12.0 |     0.0/   0.0 |     0.0/   0.0 |     0.0/   0.0 |
+node0:352775:352785 [0] NCCL INFO        Reduce |     0.0/   0.0 |     0.0/   0.0 |     0.0/   0.0 |     4.6/   3.0 |    12.5/   0.0 |    14.1/  12.0 |     0.0/   0.0 |     0.0/   0.0 |     0.0/   0.0 |
+node0:352775:352785 [0] NCCL INFO     AllGather |     0.0/   0.0 |     0.0/   0.0 |     0.0/   0.0 |     4.6/   8.0 |    12.5/   0.0 |    14.1/  24.0 |     0.0/   0.0 |     0.0/   0.0 |     0.0/   0.0 |
+node0:352775:352785 [0] NCCL INFO ReduceScatter |     0.0/   0.0 |     0.0/   0.0 |     0.0/   0.0 |     4.6/   8.0 |    12.5/   0.0 |    14.1/  24.0 |     0.0/   0.0 |     0.0/   0.0 |     0.0/   0.0 |
+node0:352775:352785 [0] NCCL INFO     AllReduce |     6.4/   1.5 |     8.2/   0.0 |    56.0/   5.5 |     5.6/   3.0 |    15.0/   0.0 |    19.8/  12.0 |    12.4/   0.0 |    14.2/   0.0 |    27.7/   0.0 |
+node0:352775:352785 [0] NCCL INFO threadThresholds 8/8/64 | 16/8/64 | 8/8/512
+node0:352775:352785 [0] NCCL INFO 8 coll channels, 8 p2p channels, 2 p2p channels per peer
+node0:352775:352786 [1] NCCL INFO Connected all rings
+node0:352775:352786 [1] NCCL INFO Connected all trees
+node0:352775:352786 [1] NCCL INFO threadThresholds 8/8/64 | 16/8/64 | 8/8/512
+node0:352775:352786 [1] NCCL INFO 8 coll channels, 8 p2p channels, 2 p2p channels per peer
+node0:352775:352785 [0] NCCL INFO comm 0x7efda3101730 rank 0 nranks 2 cudaDev 0 busId 21000 - Init COMPLETE
+node0:352775:352786 [1] NCCL INFO comm 0x7efda4001250 rank 1 nranks 2 cudaDev 1 busId e2000 - Init COMPLETE
+nChannel=1 nThread=160: node0:352775:352775 [0] NCCL INFO Launch mode Parallel
+19 milliseconds
+nChannel=1 nThread=288: 15 milliseconds
+nChannel=1 nThread=544: 18 milliseconds
+nChannel=2 nThread=160: 19 milliseconds
+nChannel=2 nThread=288: 22 milliseconds
+nChannel=2 nThread=544: 24 milliseconds
+nChannel=4 nThread=160: 22 milliseconds
+nChannel=4 nThread=288: 23 milliseconds
+nChannel=4 nThread=544: 31 milliseconds
+node0:352775:352775 [1] NCCL INFO comm 0x7efda3101730 rank 0 nranks 2 cudaDev 0 busId 21000 - Destroy COMPLETE
+node0:352775:352775 [1] NCCL INFO comm 0x7efda4001250 rank 1 nranks 2 cudaDev 1 busId e2000 - Destroy COMPLETE
+==352775== NVPROF is profiling process 352775, command: ./build/nccl_test
+==352775== Profiling application: ./build/nccl_test
+==352775== Profiling result:
+   Start  Duration            Grid Size      Block Size     Regs*    SSMem*    DSMem*      Size  Throughput  SrcMemType  DstMemType           Device   Context    Stream  Name
+677.30ms  2.2400us                    -               -         -         -         -        8B  3.4060MB/s      Device           -  Tesla V100S-PCI         2        26  [CUDA memset]
+677.43ms  1.6320us                    -               -         -         -         -  1.7813KB  1.0409GB/s      Device           -  Tesla V100S-PCI         2        28  [CUDA memset]
+677.47ms  2.4640us                    -               -         -         -         -        8B  3.0963MB/s      Device           -  Tesla V100S-PCI         1        27  [CUDA memset]
+677.54ms  1.5690us                    -               -         -         -         -  1.7813KB  1.0827GB/s      Device           -  Tesla V100S-PCI         1        29  [CUDA memset]
+677.57ms  1.4720us                    -               -         -         -         -        8B  5.1830MB/s      Device           -  Tesla V100S-PCI         2        30  [CUDA memset]
+677.65ms  1.6320us                    -               -         -         -         -  1.7813KB  1.0409GB/s      Device           -  Tesla V100S-PCI         2        31  [CUDA memset]
+677.80ms  1.3440us                    -               -         -         -         -        8B  5.6766MB/s      Device           -  Tesla V100S-PCI         1        32  [CUDA memset]
+677.82ms  1.5680us                    -               -         -         -         -  1.7813KB  1.0834GB/s      Device           -  Tesla V100S-PCI         1        33  [CUDA memset]
+679.78ms  1.8880us                    -               -         -         -         -        8B  4.0410MB/s      Device           -  Tesla V100S-PCI         2        34  [CUDA memset]
+679.80ms  1.7270us                    -               -         -         -         -        8B  4.4177MB/s      Device           -  Tesla V100S-PCI         1        35  [CUDA memset]
+679.82ms  1.6320us                    -               -         -         -         -  1.7813KB  1.0409GB/s      Device           -  Tesla V100S-PCI         2        36  [CUDA memset]
+679.84ms  1.5360us                    -               -         -         -         -  1.7813KB  1.1059GB/s      Device           -  Tesla V100S-PCI         1        37  [CUDA memset]
+679.92ms  1.4080us                    -               -         -         -         -        8B  5.4186MB/s      Device           -  Tesla V100S-PCI         2        38  [CUDA memset]
+679.95ms  1.4080us                    -               -         -         -         -        8B  5.4186MB/s      Device           -  Tesla V100S-PCI         1        39  [CUDA memset]
+679.96ms  1.6320us                    -               -         -         -         -  1.7813KB  1.0409GB/s      Device           -  Tesla V100S-PCI         2        40  [CUDA memset]
+679.98ms  1.5360us                    -               -         -         -         -  1.7813KB  1.1059GB/s      Device           -  Tesla V100S-PCI         1        41  [CUDA memset]
+682.00ms  1.8550us                    -               -         -         -         -        8B  4.1129MB/s      Device           -  Tesla V100S-PCI         2        42  [CUDA memset]
+682.03ms  1.7280us                    -               -         -         -         -        8B  4.4152MB/s      Device           -  Tesla V100S-PCI         1        43  [CUDA memset]
+682.03ms  1.6320us                    -               -         -         -         -  1.7813KB  1.0409GB/s      Device           -  Tesla V100S-PCI         2        44  [CUDA memset]
+682.10ms  1.5360us                    -               -         -         -         -  1.7813KB  1.1059GB/s      Device           -  Tesla V100S-PCI         1        45  [CUDA memset]
+682.13ms  1.4080us                    -               -         -         -         -        8B  5.4186MB/s      Device           -  Tesla V100S-PCI         2        46  [CUDA memset]
+682.18ms  1.6320us                    -               -         -         -         -  1.7813KB  1.0409GB/s      Device           -  Tesla V100S-PCI         2        47  [CUDA memset]
+682.19ms  1.5040us                    -               -         -         -         -        8B  5.0727MB/s      Device           -  Tesla V100S-PCI         1        48  [CUDA memset]
+682.22ms  1.5680us                    -               -         -         -         -  1.7813KB  1.0834GB/s      Device           -  Tesla V100S-PCI         1        49  [CUDA memset]
+684.22ms  1.8880us                    -               -         -         -         -        8B  4.0410MB/s      Device           -  Tesla V100S-PCI         2        50  [CUDA memset]
+684.25ms  1.7280us                    -               -         -         -         -        8B  4.4152MB/s      Device           -  Tesla V100S-PCI         1        51  [CUDA memset]
+684.25ms  1.6320us                    -               -         -         -         -  1.7813KB  1.0409GB/s      Device           -  Tesla V100S-PCI         2        52  [CUDA memset]
+684.32ms  1.5680us                    -               -         -         -         -  1.7813KB  1.0834GB/s      Device           -  Tesla V100S-PCI         1        53  [CUDA memset]
+684.34ms  1.4400us                    -               -         -         -         -        8B  5.2982MB/s      Device           -  Tesla V100S-PCI         2        54  [CUDA memset]
+684.39ms  1.6320us                    -               -         -         -         -  1.7813KB  1.0409GB/s      Device           -  Tesla V100S-PCI         2        55  [CUDA memset]
+684.42ms  1.3440us                    -               -         -         -         -        8B  5.6766MB/s      Device           -  Tesla V100S-PCI         1        56  [CUDA memset]
+684.45ms  1.5360us                    -               -         -         -         -  1.7813KB  1.1059GB/s      Device           -  Tesla V100S-PCI         1        57  [CUDA memset]
+734.28ms  1.9520us                    -               -         -         -         -      152B  74.262MB/s    Pageable      Device  Tesla V100S-PCI         1        59  [CUDA memcpy HtoD]
+734.28ms  1.8560us                    -               -         -         -         -      152B  78.103MB/s    Pageable      Device  Tesla V100S-PCI         2        58  [CUDA memcpy HtoD]
+737.07ms  1.7280us                    -               -         -         -         -      152B  83.888MB/s    Pageable      Device  Tesla V100S-PCI         1        59  [CUDA memcpy HtoD]
+737.08ms  1.8880us                    -               -         -         -         -      152B  76.779MB/s    Pageable      Device  Tesla V100S-PCI         2        58  [CUDA memcpy HtoD]
+740.09ms  1.7600us                    -               -         -         -         -      152B  82.363MB/s    Pageable      Device  Tesla V100S-PCI         1        59  [CUDA memcpy HtoD]
+740.09ms  1.8880us                    -               -         -         -         -      152B  76.779MB/s    Pageable      Device  Tesla V100S-PCI         2        58  [CUDA memcpy HtoD]
+742.88ms  1.7280us                    -               -         -         -         -      152B  83.888MB/s    Pageable      Device  Tesla V100S-PCI         1        59  [CUDA memcpy HtoD]
+742.88ms  1.8560us                    -               -         -         -         -      152B  78.103MB/s    Pageable      Device  Tesla V100S-PCI         2        58  [CUDA memcpy HtoD]
+745.63ms  1.7280us                    -               -         -         -         -      152B  83.888MB/s    Pageable      Device  Tesla V100S-PCI         1        59  [CUDA memcpy HtoD]
+745.64ms  1.8880us                    -               -         -         -         -      152B  76.779MB/s    Pageable      Device  Tesla V100S-PCI         2        58  [CUDA memcpy HtoD]
+748.42ms  1.7280us                    -               -         -         -         -      152B  83.888MB/s    Pageable      Device  Tesla V100S-PCI         1        59  [CUDA memcpy HtoD]
+748.43ms  1.8880us                    -               -         -         -         -      152B  76.779MB/s    Pageable      Device  Tesla V100S-PCI         2        58  [CUDA memcpy HtoD]
+751.54ms  1.7280us                    -               -         -         -         -      152B  83.888MB/s    Pageable      Device  Tesla V100S-PCI         1        59  [CUDA memcpy HtoD]
+751.55ms  1.8880us                    -               -         -         -         -      152B  76.779MB/s    Pageable      Device  Tesla V100S-PCI         2        58  [CUDA memcpy HtoD]
+754.54ms  1.7280us                    -               -         -         -         -      152B  83.888MB/s    Pageable      Device  Tesla V100S-PCI         1        59  [CUDA memcpy HtoD]
+754.55ms  1.9200us                    -               -         -         -         -      152B  75.499MB/s    Pageable      Device  Tesla V100S-PCI         2        58  [CUDA memcpy HtoD]
+755.06ms  1.3440us                    -               -         -         -         -      152B  107.86MB/s    Pageable      Device  Tesla V100S-PCI         1        59  [CUDA memcpy HtoD]
+755.06ms  1.4730us                    -               -         -         -         -      152B  98.410MB/s    Pageable      Device  Tesla V100S-PCI         2        58  [CUDA memcpy HtoD]
+755.56ms  1.3120us                    -               -         -         -         -      152B  110.49MB/s    Pageable      Device  Tesla V100S-PCI         1        59  [CUDA memcpy HtoD]
+755.57ms  1.4090us                    -               -         -         -         -      152B  102.88MB/s    Pageable      Device  Tesla V100S-PCI         2        58  [CUDA memcpy HtoD]
+756.06ms  1.3760us                    -               -         -         -         -      152B  105.35MB/s    Pageable      Device  Tesla V100S-PCI         1        59  [CUDA memcpy HtoD]
+756.07ms  1.4720us                    -               -         -         -         -      152B  98.477MB/s    Pageable      Device  Tesla V100S-PCI         2        58  [CUDA memcpy HtoD]
+756.55ms  1.3770us                    -               -         -         -         -      152B  105.27MB/s    Pageable      Device  Tesla V100S-PCI         1        59  [CUDA memcpy HtoD]
+756.56ms  1.4720us                    -               -         -         -         -      152B  98.477MB/s    Pageable      Device  Tesla V100S-PCI         2        58  [CUDA memcpy HtoD]
+757.05ms  1.3440us                    -               -         -         -         -      152B  107.86MB/s    Pageable      Device  Tesla V100S-PCI         1        59  [CUDA memcpy HtoD]
+757.06ms  1.4720us                    -               -         -         -         -      152B  98.477MB/s    Pageable      Device  Tesla V100S-PCI         2        58  [CUDA memcpy HtoD]
+757.55ms  1.3760us                    -               -         -         -         -      152B  105.35MB/s    Pageable      Device  Tesla V100S-PCI         1        59  [CUDA memcpy HtoD]
+757.56ms  1.4720us                    -               -         -         -         -      152B  98.477MB/s    Pageable      Device  Tesla V100S-PCI         2        58  [CUDA memcpy HtoD]
+758.05ms  1.3440us                    -               -         -         -         -      152B  107.86MB/s    Pageable      Device  Tesla V100S-PCI         1        59  [CUDA memcpy HtoD]
+758.06ms  1.5040us                    -               -         -         -         -      152B  96.382MB/s    Pageable      Device  Tesla V100S-PCI         2        58  [CUDA memcpy HtoD]
+758.44ms  1.3760us                    -               -         -         -         -      152B  105.35MB/s    Pageable      Device  Tesla V100S-PCI         1        59  [CUDA memcpy HtoD]
+758.70ms  1.4400us                    -               -         -         -         -      152B  100.67MB/s    Pageable      Device  Tesla V100S-PCI         2        58  [CUDA memcpy HtoD]
+761.18ms  21.024us                    -               -         -         -         -  16.000MB  743.20GB/s      Device           -  Tesla V100S-PCI         1        64  [CUDA memset]
+761.47ms  3.2630us                    -               -         -         -         -  16.039KB  4.6877GB/s      Device           -  Tesla V100S-PCI         1        66  [CUDA memset]
+761.50ms  1.7920us                    -               -         -         -         -  4.0000KB  2.1287GB/s    Pageable      Device  Tesla V100S-PCI         1         7  [CUDA memcpy HtoD]
+761.51ms  1.3440us                    -               -         -         -         -        8B  5.6766MB/s    Pageable      Device  Tesla V100S-PCI         1         7  [CUDA memcpy HtoD]
+761.52ms  1.3440us                    -               -         -         -         -        8B  5.6766MB/s    Pageable      Device  Tesla V100S-PCI         1         7  [CUDA memcpy HtoD]
+761.53ms  1.3440us                    -               -         -         -         -        8B  5.6766MB/s    Pageable      Device  Tesla V100S-PCI         1         7  [CUDA memcpy HtoD]
+761.54ms  1.3430us                    -               -         -         -         -        8B  5.6809MB/s    Pageable      Device  Tesla V100S-PCI         1         7  [CUDA memcpy HtoD]
+761.55ms  1.3440us                    -               -         -         -         -        8B  5.6766MB/s    Pageable      Device  Tesla V100S-PCI         1         7  [CUDA memcpy HtoD]
+761.56ms  1.4400us                    -               -         -         -         -        8B  5.2982MB/s    Pageable      Device  Tesla V100S-PCI         1         7  [CUDA memcpy HtoD]
+761.57ms  1.3440us                    -               -         -         -         -        8B  5.6766MB/s    Pageable      Device  Tesla V100S-PCI         1         7  [CUDA memcpy HtoD]
+761.58ms  1.3120us                    -               -         -         -         -        8B  5.8151MB/s    Pageable      Device  Tesla V100S-PCI         1         7  [CUDA memcpy HtoD]
+761.59ms  1.3120us                    -               -         -         -         -       40B  29.075MB/s    Pageable      Device  Tesla V100S-PCI         1         7  [CUDA memcpy HtoD]
+761.65ms  21.247us                    -               -         -         -         -  16.000MB  735.40GB/s      Device           -  Tesla V100S-PCI         2        65  [CUDA memset]
+761.69ms  3.8400us                    -               -         -         -         -  16.039KB  3.9833GB/s      Device           -  Tesla V100S-PCI         2        67  [CUDA memset]
+761.72ms  1.9200us                    -               -         -         -         -  4.0000KB  1.9868GB/s    Pageable      Device  Tesla V100S-PCI         2        17  [CUDA memcpy HtoD]
+761.73ms  1.6960us                    -               -         -         -         -        8B  4.4985MB/s    Pageable      Device  Tesla V100S-PCI         2        17  [CUDA memcpy HtoD]
+761.74ms  1.4720us                    -               -         -         -         -        8B  5.1830MB/s    Pageable      Device  Tesla V100S-PCI         2        17  [CUDA memcpy HtoD]
+761.75ms  1.4720us                    -               -         -         -         -        8B  5.1830MB/s    Pageable      Device  Tesla V100S-PCI         2        17  [CUDA memcpy HtoD]
+761.76ms  1.4720us                    -               -         -         -         -        8B  5.1830MB/s    Pageable      Device  Tesla V100S-PCI         2        17  [CUDA memcpy HtoD]
+761.77ms  1.4730us                    -               -         -         -         -        8B  5.1795MB/s    Pageable      Device  Tesla V100S-PCI         2        17  [CUDA memcpy HtoD]
+761.78ms  1.4080us                    -               -         -         -         -        8B  5.4186MB/s    Pageable      Device  Tesla V100S-PCI         2        17  [CUDA memcpy HtoD]
+761.79ms  1.4400us                    -               -         -         -         -        8B  5.2982MB/s    Pageable      Device  Tesla V100S-PCI         2        17  [CUDA memcpy HtoD]
+761.80ms  1.4720us                    -               -         -         -         -        8B  5.1830MB/s    Pageable      Device  Tesla V100S-PCI         2        17  [CUDA memcpy HtoD]
+761.81ms  1.4400us                    -               -         -         -         -       40B  26.491MB/s    Pageable      Device  Tesla V100S-PCI         2        17  [CUDA memcpy HtoD]
+761.96ms  5.8902ms          (10240 1 1)      (1024 1 1)        24        0B        0B         -           -           -           -  Tesla V100S-PCI         1        15  kernel(float*, unsigned long) [4065]
+761.98ms  5.1676ms          (10240 1 1)      (1024 1 1)        24        0B        0B         -           -           -           -  Tesla V100S-PCI         2        25  kernel(float*, unsigned long) [4068]
+762.04ms  19.628ms              (1 1 1)       (160 1 1)        96  41.109KB        0B         -           -           -           -  Tesla V100S-PCI         1        14  ncclKernel_AllReduce_RING_LL_Sum_float(ncclDevComm*, ncclWorkElem) [4077]
+762.05ms  19.455ms              (1 1 1)       (160 1 1)        96  41.109KB        0B         -           -           -           -  Tesla V100S-PCI         2        24  ncclKernel_AllReduce_RING_LL_Sum_float(ncclDevComm*, ncclWorkElem) [4079]
+2.79521s  5.8263ms          (10240 1 1)      (1024 1 1)        24        0B        0B         -           -           -           -  Tesla V100S-PCI         1        15  kernel(float*, unsigned long) [4092]
+2.79523s  5.4936ms          (10240 1 1)      (1024 1 1)        24        0B        0B         -           -           -           -  Tesla V100S-PCI         2        25  kernel(float*, unsigned long) [4095]
+2.79528s  14.629ms              (1 1 1)       (288 1 1)        96  41.109KB        0B         -           -           -           -  Tesla V100S-PCI         1        14  ncclKernel_AllReduce_RING_LL_Sum_float(ncclDevComm*, ncclWorkElem) [4101]
+2.79529s  14.533ms              (1 1 1)       (288 1 1)        96  41.109KB        0B         -           -           -           -  Tesla V100S-PCI         2        24  ncclKernel_AllReduce_RING_LL_Sum_float(ncclDevComm*, ncclWorkElem) [4103]
+4.82322s  6.9711ms          (10240 1 1)      (1024 1 1)        24        0B        0B         -           -           -           -  Tesla V100S-PCI         1        15  kernel(float*, unsigned long) [4116]
+4.82323s  6.8927ms          (10240 1 1)      (1024 1 1)        24        0B        0B         -           -           -           -  Tesla V100S-PCI         2        25  kernel(float*, unsigned long) [4119]
+4.82328s  17.835ms              (1 1 1)       (544 1 1)        96  41.109KB        0B         -           -           -           -  Tesla V100S-PCI         1        14  ncclKernel_AllReduce_RING_LL_Sum_float(ncclDevComm*, ncclWorkElem) [4125]
+4.82329s  17.744ms              (1 1 1)       (544 1 1)        96  41.109KB        0B         -           -           -           -  Tesla V100S-PCI         2        24  ncclKernel_AllReduce_RING_LL_Sum_float(ncclDevComm*, ncclWorkElem) [4127]
+6.85438s  6.4568ms          (10240 1 1)      (1024 1 1)        24        0B        0B         -           -           -           -  Tesla V100S-PCI         1        15  kernel(float*, unsigned long) [4140]
+6.85440s  7.3535ms          (10240 1 1)      (1024 1 1)        24        0B        0B         -           -           -           -  Tesla V100S-PCI         2        25  kernel(float*, unsigned long) [4143]
+6.85446s  18.665ms              (2 1 1)       (160 1 1)        96  41.109KB        0B         -           -           -           -  Tesla V100S-PCI         1        14  ncclKernel_AllReduce_RING_LL_Sum_float(ncclDevComm*, ncclWorkElem) [4149]
+6.85447s  18.487ms              (2 1 1)       (160 1 1)        96  41.109KB        0B         -           -           -           -  Tesla V100S-PCI         2        24  ncclKernel_AllReduce_RING_LL_Sum_float(ncclDevComm*, ncclWorkElem) [4151]
+8.88649s  8.2822ms          (10240 1 1)      (1024 1 1)        24        0B        0B         -           -           -           -  Tesla V100S-PCI         1        15  kernel(float*, unsigned long) [4164]
+8.88651s  7.7524ms          (10240 1 1)      (1024 1 1)        24        0B        0B         -           -           -           -  Tesla V100S-PCI         2        25  kernel(float*, unsigned long) [4167]
+8.88654s  22.240ms              (2 1 1)       (288 1 1)        96  41.109KB        0B         -           -           -           -  Tesla V100S-PCI         1        14  ncclKernel_AllReduce_RING_LL_Sum_float(ncclDevComm*, ncclWorkElem) [4173]
+8.88656s  22.071ms              (2 1 1)       (288 1 1)        96  41.109KB        0B         -           -           -           -  Tesla V100S-PCI         2        24  ncclKernel_AllReduce_RING_LL_Sum_float(ncclDevComm*, ncclWorkElem) [4175]
+10.9221s  8.0992ms          (10240 1 1)      (1024 1 1)        24        0B        0B         -           -           -           -  Tesla V100S-PCI         1        15  kernel(float*, unsigned long) [4188]
+10.9222s  7.8278ms          (10240 1 1)      (1024 1 1)        24        0B        0B         -           -           -           -  Tesla V100S-PCI         2        25  kernel(float*, unsigned long) [4191]
+10.9222s  23.516ms              (2 1 1)       (544 1 1)        96  41.109KB        0B         -           -           -           -  Tesla V100S-PCI         1        14  ncclKernel_AllReduce_RING_LL_Sum_float(ncclDevComm*, ncclWorkElem) [4197]
+10.9222s  23.353ms              (2 1 1)       (544 1 1)        96  41.109KB        0B         -           -           -           -  Tesla V100S-PCI         2        24  ncclKernel_AllReduce_RING_LL_Sum_float(ncclDevComm*, ncclWorkElem) [4199]
+12.9589s  8.6009ms          (10240 1 1)      (1024 1 1)        24        0B        0B         -           -           -           -  Tesla V100S-PCI         1        15  kernel(float*, unsigned long) [4212]
+12.9589s  8.6750ms          (10240 1 1)      (1024 1 1)        24        0B        0B         -           -           -           -  Tesla V100S-PCI         2        25  kernel(float*, unsigned long) [4215]
+12.9590s  21.664ms              (4 1 1)       (160 1 1)        96  41.109KB        0B         -           -           -           -  Tesla V100S-PCI         1        14  ncclKernel_AllReduce_RING_LL_Sum_float(ncclDevComm*, ncclWorkElem) [4221]
+12.9590s  21.612ms              (4 1 1)       (160 1 1)        96  41.109KB        0B         -           -           -           -  Tesla V100S-PCI         2        24  ncclKernel_AllReduce_RING_LL_Sum_float(ncclDevComm*, ncclWorkElem) [4223]
+14.9939s  8.5679ms          (10240 1 1)      (1024 1 1)        24        0B        0B         -           -           -           -  Tesla V100S-PCI         1        15  kernel(float*, unsigned long) [4236]
+14.9940s  9.0258ms          (10240 1 1)      (1024 1 1)        24        0B        0B         -           -           -           -  Tesla V100S-PCI         2        25  kernel(float*, unsigned long) [4239]
+14.9940s  23.245ms              (4 1 1)       (288 1 1)        96  41.109KB        0B         -           -           -           -  Tesla V100S-PCI         1        14  ncclKernel_AllReduce_RING_LL_Sum_float(ncclDevComm*, ncclWorkElem) [4245]
+14.9940s  23.409ms              (4 1 1)       (288 1 1)        96  41.109KB        0B         -           -           -           -  Tesla V100S-PCI         2        24  ncclKernel_AllReduce_RING_LL_Sum_float(ncclDevComm*, ncclWorkElem) [4247]
+17.0306s  10.284ms          (10240 1 1)      (1024 1 1)        24        0B        0B         -           -           -           -  Tesla V100S-PCI         1        15  kernel(float*, unsigned long) [4260]
+17.0306s  8.9234ms          (10240 1 1)      (1024 1 1)        24        0B        0B         -           -           -           -  Tesla V100S-PCI         2        25  kernel(float*, unsigned long) [4263]
+17.0307s  30.471ms              (4 1 1)       (544 1 1)        96  41.109KB        0B         -           -           -           -  Tesla V100S-PCI         1        14  ncclKernel_AllReduce_RING_LL_Sum_float(ncclDevComm*, ncclWorkElem) [4269]
+17.0307s  30.294ms              (4 1 1)       (544 1 1)        96  41.109KB        0B         -           -           -           -  Tesla V100S-PCI         2        24  ncclKernel_AllReduce_RING_LL_Sum_float(ncclDevComm*, ncclWorkElem) [4271]
+
+Regs: Number of registers used per CUDA thread. This number includes registers used internally by the CUDA driver and/or tools and can be more than what the compiler shows.
+SSMem: Static shared memory allocated per CUDA block.
+DSMem: Dynamic shared memory allocated per CUDA block.
+SrcMemType: The type of source memory accessed by memory operation/copy
+DstMemType: The type of destination memory accessed by memory operation/copy
