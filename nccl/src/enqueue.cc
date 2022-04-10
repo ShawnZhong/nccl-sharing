@@ -479,8 +479,8 @@ static ncclResult_t getAlgoInfo(struct ncclInfo* info, int collNetTypeSupport, i
     if (info->algorithm == NCCL_ALGO_TREE) nt += 3*WARP_SIZE;
     if (info->algorithm == NCCL_ALGO_COLLNET) nt += 3*WARP_SIZE;
   }
-  info->nChannels = nc;
-  info->nThreads = nt;
+  if (info->nChannels == 0) info->nChannels = nc;
+  if (info->nThreads == 0) info->nThreads = nt;
   return ncclSuccess;
 }
 
@@ -527,7 +527,7 @@ static ncclResult_t computeColl(struct ncclInfo* info /* input */, struct ncclWo
   int collNetTypeSupport = 0;
   // Check whether algo and proto have been preset (as in aggregation case)
   // If so, skip the calculation
-  if (info->nChannels > 0 && info->nThreads > 0) goto comp_next;
+  if (info->algorithm != -1 && info->protocol != -1) goto comp_next;
   NCCLCHECK(getCollNetSupport(info, &collNetTypeSupport));
   NCCLCHECK(getAlgoInfo(info, collNetTypeSupport, 1));
 
@@ -781,7 +781,7 @@ ncclResult_t ncclSetupAsyncKernels(ncclComm_t comm) {
   } else if (comm->asyncOpCount == 1) {
     // No aggregation
     struct ncclInfo* info = comm->asyncOps;
-    info->nChannels = 0;
+    // info->nChannels = 0;
     NCCLCHECK(ncclSetupCollKernel(info));
   } else {
     // Aggregation
@@ -806,7 +806,8 @@ ncclResult_t ncclSetupAsyncKernels(ncclComm_t comm) {
     int allCollNetSupport = comm->collNetSupport;
     for (int c = 0; c < comm->asyncOpCount; c++) {
       struct ncclInfo* info = comm->asyncOps+c;
-      info->nChannels = std::min(std::max(1, (int)DIVUP(info->nBytes, channelSize)), comm->nChannels); // assign number of channels
+      if (info->nChannels == 0) 
+        info->nChannels = std::min(std::max(1, (int)DIVUP(info->nBytes, channelSize)), comm->nChannels); // assign number of channels
       channelUsed += info->nChannels;
       // We can use fast path if all collectives are the same
       homogeneous &= info->coll == comm->asyncOps[0].coll &&
@@ -1333,6 +1334,8 @@ ncclResult_t ncclEnqueueCheck(struct ncclInfo* info) {
   ncclResult_t ret = ncclSuccess;
   bool isAsync = ncclAsyncMode();
   int savedDev = -1;
+  info->algorithm = -1;
+  info->protocol = -1;
   // Check arguments
   NCCLCHECK(PtrCheck(info->comm, info->opName, "comm"));
   if (isAsync && info->comm->checkPointers) {

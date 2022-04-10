@@ -69,7 +69,7 @@ int main(int argc, char *argv[]) {
     //multiple devices per thread
     NCCLCHECK(ncclGroupStart());
     for (int i = 0; i < nDev; ++i) {
-        NCCLCHECK(ncclAllReduce(nccl_buff[i], nccl_buff[i], nccl_size, ncclFloat, ncclSum, comms[i], nccl_streams[i]));
+        NCCLCHECK(ncclAllReduce(nccl_buff[i], nccl_buff[i], nccl_size, ncclFloat, ncclSum, comms[i], nccl_streams[i], 2, 288));
     }
 
     for (int i = 0; i < nDev; ++i) {
