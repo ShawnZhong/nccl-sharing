@@ -12,4 +12,11 @@ NCCL_MIN_NCHANNELS
 NCCL_MAX_NCHANNELS
 NCCL_NTHREADS
 https://docs.nvidia.com/deeplearning/nccl/user-guide/docs/env.html
+
+# install java 8 and run nvvp
+sudo apt install openjdk-8-jdk
+nvvp -vm /usr/lib/jvm/java-8-openjdk-amd64/jre/bin/java python main.py
+
+# profile main.py
+nvprof python main.py
 ```
