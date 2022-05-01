@@ -12,7 +12,7 @@ import torch.distributed as dist
 from torch.nn.parallel import DistributedDataParallel as DDP
 from torchvision import models
 import torch.multiprocessing as mp
-from torch.profiler import profile, record_function, ProfilerActivity
+from torch.profiler import profile, ProfilerActivity
 
 
 def print_profiling_info(prof):
@@ -30,16 +30,22 @@ def print_profiling_info(prof):
 
     comp_time = sum(e.cuda_time_total for e in comp_events) / 1e6
     comm_time = sum(e.cuda_time_total for e in comm_events) / 1e6
+    cuda_time = comp_time + comm_time
 
     overlap_time = 0
     for comm_event in comm_events:
         for comp_event in comp_events:
-            if (comm_event.time_range.start > comp_event.time_range.end or comm_event.time_range.end < comp_event.time_range.start):
+            if comm_event.time_range.start > comp_event.time_range.end:
                 continue
-            overlap_time += min(comm_event.time_range.end, comp_event.time_range.end) - max(comm_event.time_range.start, comp_event.time_range.start)
-    overlap_time /= 1e6
+            if comm_event.time_range.end < comp_event.time_range.start:
+                continue
+            min_end = min(comm_event.time_range.end, comp_event.time_range.end)
+            max_start = max(comm_event.time_range.start, comp_event.time_range.start)
+            overlap_time += (min_end - max_start) / 1e6
 
-    print(f"comp time: {comp_time:.3f}, comm time: {comm_time:.3f}, cuda time:{comp_time + comm_time:.3f}, overlap time: {overlap_time:.3f}")
+    print(
+        f"time: comp {comp_time:.3f}, comm {comm_time:.3f}, cuda {cuda_time:.3f}, overlap {overlap_time:.3f}"
+    )
 
 
 def train(rank, args):
@@ -73,7 +79,8 @@ def train(rank, args):
             print_profiling_info(prof)
         optimizer.step()
         throughput = args.batch_size / (end_ts - start_ts)
-        print(f"[{rank}] iter {i}: {throughput:.2f} it/sec, {end_ts - start_ts:.3f} sec")
+        cpu_time = end_ts - start_ts
+        print(f"[{rank}] iter {i}: {throughput:.2f} it/sec, {cpu_time:.3f} sec")
 
 
 if __name__ == "__main__":
@@ -81,8 +88,7 @@ if __name__ == "__main__":
     parser.add_argument("-w", "--world_size", type=int, default=2)
     parser.add_argument("-m", "--model_name", type=str, default="resnet50")
     parser.add_argument("-b", "--batch_size", type=int, default=32)
-    parser.add_argument("-c", "--configs", type=str,
-                        nargs="+", default=["2,256"])
+    parser.add_argument("-c", "--configs", nargs="+", default=["2,256"])
     parser.add_argument("-n", "--niter", type=int, default=3)
     parser.add_argument("-d", "--debug", action="store_true")
     args = parser.parse_args()
@@ -98,4 +104,4 @@ if __name__ == "__main__":
             os.environ["TORCH_DISTRIBUTED_DEBUG"] = "DETAIL"
             os.environ["NCCL_DEBUG"] = "INFO"
         print(f"nchannels = {nchannels}, nthreads = {nthreads}")
-        mp.spawn(train, args=(args, ), nprocs=args.world_size)
+        mp.spawn(train, args=(args,), nprocs=args.world_size)

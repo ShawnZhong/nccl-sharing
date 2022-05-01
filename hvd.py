@@ -1,27 +1,22 @@
 import argparse
-import torch.backends.cudnn as cudnn
 import torch.nn.functional as F
 import torch.optim as optim
 import torch.utils.data.distributed
 from torchvision import models
 import horovod.torch as hvd
-import horovod
 import timeit
 import numpy as np
-import torch.multiprocessing as mp
 import os
 from torch.profiler import profile, record_function, ProfilerActivity
 from main import print_profiling_info
 
-def main(args):
+def main(model_name, batch_size, num_iters, num_warmup_iters):
     hvd.init()
     rank = hvd.local_rank()
     torch.cuda.set_device(rank)
 
-    cudnn.benchmark = True
-
     # Set up standard model.
-    model = getattr(models, args.model)()
+    model = getattr(models, model_name)()
     model.cuda()
 
     # By default, Adasum doesn't need scaling up learning rate.
@@ -38,8 +33,8 @@ def main(args):
     hvd.broadcast_optimizer_state(optimizer, root_rank=0)
 
     # Set up fixed fake data
-    data = torch.randn(args.batch_size, 3, 224, 224, device=rank)
-    target = torch.randint(0, 1000, (args.batch_size,), device=rank)
+    data = torch.randn(batch_size, 3, 224, 224, device=rank)
+    target = torch.randint(0, 1000, (batch_size,), device=rank)
 
 
     def benchmark_step():
@@ -58,20 +53,20 @@ def main(args):
         print(s, end='\n' if nl else '')
 
 
-    log('Model: %s' % args.model)
-    log('Batch size: %d' % args.batch_size)
+    log('Model: %s' % model_name)
+    log('Batch size: %d' % batch_size)
     log('Number of GPUs: %d' % (hvd.size()))
 
     # Warm-up
     log('Running warmup...')
-    timeit.timeit(benchmark_step, number=args.num_warmup_batches)
+    timeit.timeit(benchmark_step, number=num_warmup_iters)
 
     # Benchmark
     log('Running benchmark...')
     img_secs = []
-    for x in range(args.num_iters):
+    for x in range(num_iters):
         time = timeit.timeit(benchmark_step, number=1)
-        img_sec = args.batch_size / time
+        img_sec = batch_size / time
         log('Iter #%d: %.1f img/sec per GPU' % (x, img_sec))
         img_secs.append(img_sec)
 
@@ -85,20 +80,18 @@ def main(args):
 if __name__ == "__main__":
     # Benchmark settings
     parser = argparse.ArgumentParser()
-    parser.add_argument('--model', type=str, default='resnet50',
+    parser.add_argument('--model_name', type=str, default='resnet50',
                         help='model to benchmark')
     parser.add_argument('--batch-size', type=int, default=32,
                         help='input batch size')
 
-    parser.add_argument('--num-warmup-batches', type=int, default=0,
+    parser.add_argument('--num-warmup-iters', type=int, default=0,
                         help='number of warm-up batches that don\'t count towards benchmark')
     parser.add_argument('--num-iters', type=int, default=10,
                         help='number of benchmark iterations')
 
-    parser.add_argument("--world_size", default=2)
+    # parser.add_argument("--world_size", default=2)
 
     args = parser.parse_args()
     os.environ["NCCL_P2P_DISABLE"] = "1"
-    # horovod.run(main, args, np=2)
-    # mp.spawn(main, args=(args,), nprocs=args.world_size, join=True)
-    main(args=args)
+    main(**vars(args))
