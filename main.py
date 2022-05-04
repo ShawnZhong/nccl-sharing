@@ -28,8 +28,8 @@ def print_profiling_info(prof):
         else:
             comp_events.append(event)
 
-    comp_time = sum(e.cuda_time_total for e in comp_events) / 1e6
-    comm_time = sum(e.cuda_time_total for e in comm_events) / 1e6
+    comp_time = sum(e.cuda_time_total for e in comp_events) / 1e3
+    comm_time = sum(e.cuda_time_total for e in comm_events) / 1e3
     cuda_time = comp_time + comm_time
 
     overlap_time = 0
@@ -41,10 +41,10 @@ def print_profiling_info(prof):
                 continue
             min_end = min(comm_event.time_range.end, comp_event.time_range.end)
             max_start = max(comm_event.time_range.start, comp_event.time_range.start)
-            overlap_time += (min_end - max_start) / 1e6
+            overlap_time += (min_end - max_start) / 1e3
 
     print(
-        f"time: comp {comp_time:.3f}, comm {comm_time:.3f}, cuda {cuda_time:.3f}, overlap {overlap_time:.3f}"
+        f"comp {comp_time:6.3f} ms, comm {comm_time:6.3f} ms, cuda {cuda_time:6.3f} ms, overlap {overlap_time:6.3f} ms"
     )
 
 
@@ -67,31 +67,31 @@ def train(rank, args):
     optimizer = torch.optim.SGD(ddp_model.parameters(), lr=0.01)
 
     for i in range(args.niter):
-        optimizer.zero_grad()
-        output = ddp_model(data)
-        loss = F.cross_entropy(output, target)
-        start_ts = time.time()
         with profile(activities=[ProfilerActivity.CUDA]) as prof:
+            start_ts = time.time()
+            optimizer.zero_grad()
+            output = ddp_model(data)
+            loss = F.cross_entropy(output, target)
             loss.backward()
-        end_ts = time.time()
+            optimizer.step()
+            end_ts = time.time()
 
-        if rank == 0 and i == 2:
+        if rank == 0 and i == args.niter - 1:
             print_profiling_info(prof)
-        optimizer.step()
+        
         throughput = args.batch_size / (end_ts - start_ts)
         cpu_time = end_ts - start_ts
         print(f"[{rank}] iter {i}: {throughput:.2f} it/sec, {cpu_time:.3f} sec")
 
-
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
+def add_common_args(parser):
     parser.add_argument("-w", "--world_size", type=int, default=2)
-    parser.add_argument("-m", "--model_name", type=str, default="resnet50")
-    parser.add_argument("-b", "--batch_size", type=int, default=32)
     parser.add_argument("-c", "--configs", nargs="+", default=["2,256"])
-    parser.add_argument("-n", "--niter", type=int, default=3)
     parser.add_argument("-d", "--debug", action="store_true")
-    args = parser.parse_args()
+    parser.add_argument("-g", "--grid", action="store_true")
+
+def run_configs(fn, args):
+    if args.grid:
+        args.configs = [f"{i},{2 ** j}" for i in range(1, 5) for j in range(6, 10)]
     print(args)
     for config in args.configs:
         nchannels, nthreads = map(int, config.split(","))
@@ -103,5 +103,14 @@ if __name__ == "__main__":
             os.environ["TORCH_CPP_LOG_LEVEL"] = "INFO"
             os.environ["TORCH_DISTRIBUTED_DEBUG"] = "DETAIL"
             os.environ["NCCL_DEBUG"] = "INFO"
-        print(f"nchannels = {nchannels}, nthreads = {nthreads}")
-        mp.spawn(train, args=(args,), nprocs=args.world_size)
+        print(f"{nchannels},{nthreads:4}, ", end="")
+        mp.spawn(fn, args=(args,), nprocs=args.world_size)
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-m", "--model_name", type=str, default="resnet50")
+    parser.add_argument("-b", "--batch_size", type=int, default=32)
+    parser.add_argument("-n", "--niter", type=int, default=3)
+    add_common_args(parser)
+    args = parser.parse_args()
+    run_configs(train, args)
