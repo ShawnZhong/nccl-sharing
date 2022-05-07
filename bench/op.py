@@ -7,7 +7,7 @@ import torch
 from torch.profiler import profile, ProfilerActivity
 import torch.distributed as dist
 
-from main import get_profiling_info, run_configs, add_common_args, parse_args
+from model import get_profiling_info, run_configs, add_common_args, parse_args
 
 comp_dict = {
     "conv": models.resnet18().layer1[0].conv1,
