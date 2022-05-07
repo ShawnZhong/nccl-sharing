@@ -1,7 +1,6 @@
 import argparse
 import os
-
-from itertools import product
+import itertools
 
 from common import add_common_args
 
@@ -26,16 +25,20 @@ def run(file, **kwargs):
     configs = kwargs.pop("configs")
     model_names = kwargs.pop("model_names")
     batch_sizes = kwargs.pop("batch_sizes")
-    for model_name, config, batch_size in product(model_names, configs, batch_sizes):
+    frameworks = kwargs.pop("frameworks")
+    combinations = itertools.product(model_names, frameworks, batch_sizes, configs)
+    for model_name, framework, batch_size, config in combinations:
         kwargs["model_name"] = model_name
+        kwargs["framework"] = framework
         kwargs["batch_size"] = batch_size
         kwargs["nchannels"], kwargs["nthreads"] = map(int, config.split(","))
+
         world_size = kwargs["world_size"]
         args = " ".join(map(arg_to_str, kwargs.keys(), kwargs.values()))
-        if kwargs["framework"] == "torch":
+        if framework == "torch":
             os.environ["OMP_NUM_THREADS"] = "1"
             system(f"torchrun --nproc_per_node {world_size} {file} {args}")
-        elif kwargs["framework"] == "hvd":
+        elif framework == "hvd":
             system(f"horovodrun -np {world_size} python {file} {args}")
 
 
@@ -43,14 +46,17 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     subparsers = parser.add_subparsers(dest="file", required=True)
 
+    # model launcher
     model_parser = subparsers.add_parser("model")
     model_parser.add_argument("-m", "--model_names",
                               nargs="+", default=["resnet50"])
     model_parser.add_argument("-b", "--batch_sizes",
-                              nargs="+", type=int, default=[32])
-    model_parser.add_argument("-f", "--framework", type=str,
-                              default="torch", choices=["torch", "hvd"])
+                              nargs="+", default=[32])
+    model_parser.add_argument("-f", "--frameworks",
+                              nargs="+", default=["torch"], 
+                              choices=["torch", "hvd", "all"])
 
+    # op launcher
     op_subparser = subparsers.add_parser("op")
 
     for subparser in [model_parser, op_subparser]:
@@ -64,6 +70,21 @@ if __name__ == "__main__":
             for i in range(1, 5)
             for j in range(6, 10)
         ]
+    if "all" in args.batch_sizes:
+        args.batch_sizes = [16, 32, 64, 128]
+    if "all" in args.frameworks:
+        args.frameworks = ["torch", "hvd"]
+    if "all" in args.model_names:
+        args.model_names = ["resnet18", "resnet50", "resnet101", "vgg13", "vgg16", "vgg19", "alexnet", "vit_b_16", "vit_b_19"]
+    
+    args.output_dir.mkdir(exist_ok=True)
+    with open(args.output_dir / "args.txt", "w") as f:
+        f.write(str(args))
+
+    if args.file == "model":
+        with open(args.output_dir / "result.csv", "w") as f:
+            f.write("rank, framework, model_name, batch_size, nchannels, nthreads, comp_time, comm_time, overlap_time, cpu_time, throughput\n")
+    
     args.file += ".py"
     print(args)
     run(**vars(args))

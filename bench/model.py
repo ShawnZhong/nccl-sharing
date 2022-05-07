@@ -48,7 +48,7 @@ def get_config():
     return int(nminchannels), int(nthreads)
 
 
-def run(rank, model, optimizer, batch_size, niter, framework, model_name, **kwargs):
+def run(rank, model, optimizer, batch_size, niter, framework, model_name, fout, **kwargs):
     import torch
     import torch.nn.functional as F
     from torch.profiler import profile, ProfilerActivity
@@ -81,7 +81,8 @@ def run(rank, model, optimizer, batch_size, niter, framework, model_name, **kwar
             f"{comm_time:8.3f}, "
             f"{overlap_time:8.3f}, "
             f"{cpu_time:8.3f}, "
-            f"{throughput:8.3f}"
+            f"{throughput:8.3f}", 
+            file=fout
         )
 
 
@@ -145,8 +146,9 @@ def main():
             optimizer,
             named_parameters=model.named_parameters()
         )
-
-    run(rank, model, optimizer, **vars(args))
+    args.output_dir.mkdir(exist_ok=True)
+    with open(args.output_dir / "result.csv", "a") as fout:
+        run(rank=rank, model=model, optimizer=optimizer, fout=fout, **vars(args))
 
 
 if __name__ == "__main__":
