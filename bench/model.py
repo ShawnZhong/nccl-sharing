@@ -1,10 +1,11 @@
-"""
-nvprof --profile-child-processes -s -f -o profile-%p.nvvp python main.py
-"""
-
 import os
 import time
 import argparse
+
+import torch
+import torch.nn.functional as F
+from torch.profiler import profile, ProfilerActivity
+import torchvision
 
 from common import add_common_args
 
@@ -48,44 +49,6 @@ def get_config():
     return int(nminchannels), int(nthreads)
 
 
-def run(rank, model, optimizer, batch_size, niter, framework, model_name, fout, **kwargs):
-    import torch
-    import torch.nn.functional as F
-    from torch.profiler import profile, ProfilerActivity
-
-    data = torch.randn(batch_size, 3, 224, 224, device=rank)
-    target = torch.randint(0, 1000, (batch_size,), device=rank)
-    for i in range(niter):
-        with profile(activities=[ProfilerActivity.CUDA]) as prof:
-            start_ts = time.time()
-            optimizer.zero_grad()
-            output = model(data)
-            loss = F.cross_entropy(output, target)
-            loss.backward()
-            optimizer.step()
-            torch.cuda.synchronize(rank)
-            end_ts = time.time()
-
-        cpu_time = (end_ts - start_ts) * 1e3
-        throughput = batch_size / (end_ts - start_ts)
-        comp_time, comm_time, overlap_time = get_profiling_info(prof)
-        nchannels, nthreads = get_config()
-        print(
-            f"{rank}, "
-            f"{framework}, "
-            f"{model_name}, "
-            f"{batch_size}, "
-            f"{nchannels}, "
-            f"{nthreads:4}, "
-            f"{comp_time:8.3f}, "
-            f"{comm_time:8.3f}, "
-            f"{overlap_time:8.3f}, "
-            f"{cpu_time:8.3f}, "
-            f"{throughput:8.3f}", 
-            file=fout
-        )
-
-
 def add_worker_args(parser):
     add_common_args(parser)
     parser.add_argument("-nc", "--nchannels", type=int, default=2)
@@ -104,39 +67,14 @@ def set_worker_env(args):
     os.environ["NCCL_NTHREADS"] = str(args.nthreads)
 
 
-def main():
-    import torch
-    import torchvision
-
-    parser = argparse.ArgumentParser()
-    add_worker_args(parser)
-    parser.add_argument("-m", "--model_name", type=str, default="resnet50")
-    parser.add_argument("-f", "--framework", type=str,
-                        default="torch", choices=["torch", "hvd"])
-    parser.add_argument("-b", "--batch_size", type=int, default=32)
-    args = parser.parse_args()
-    print(args)
-    set_worker_env(args)
-
-    # initialize distributed backend
-    if args.framework == "torch":
-        import torch.distributed as dist
-        if "MASTER_ADDR" not in os.environ:
-            os.environ["MASTER_ADDR"] = "localhost"
-        if "MASTER_PORT" not in os.environ:
-            os.environ["MASTER_PORT"] = "12345"
-        rank = int(os.environ["LOCAL_RANK"])
-        dist.init_process_group(backend="nccl", rank=rank)
-    elif args.framework == "hvd":
-        import horovod.torch as hvd
-        hvd.init()
-        rank = hvd.local_rank()
-
+def main(rank, args):
     torch.cuda.set_device(rank)
     model = getattr(torchvision.models, args.model_name)().to(rank)
 
     if args.framework == "torch":
+        import torch.distributed as dist
         from torch.nn.parallel import DistributedDataParallel as DDP
+        dist.init_process_group(backend="nccl", rank=rank)
         model = DDP(model)
         optimizer = torch.optim.SGD(model.parameters(), lr=0.01)
     elif args.framework == "hvd":
@@ -146,10 +84,77 @@ def main():
             optimizer,
             named_parameters=model.named_parameters()
         )
-    args.output_dir.mkdir(exist_ok=True)
+    args.output_dir.mkdir(exist_ok=True, parents=True)
     with open(args.output_dir / "result.csv", "a") as fout:
-        run(rank=rank, model=model, optimizer=optimizer, fout=fout, **vars(args))
+        data = torch.randn(args.batch_size, 3, 224, 224, device=rank)
+        target = torch.randint(0, 1000, (args.batch_size,), device=rank)
+        for i in range(args.niter):
+            with profile(activities=[ProfilerActivity.CUDA]) as prof:
+                start_ts = time.time()
+                optimizer.zero_grad()
+                output = model(data)
+                loss = F.cross_entropy(output, target)
+                loss.backward()
+                optimizer.step()
+                torch.cuda.synchronize(rank)
+                end_ts = time.time()
+
+            cpu_time = (end_ts - start_ts) * 1e3
+            throughput = args.batch_size / (end_ts - start_ts)
+            comp_time, comm_time, overlap_time = get_profiling_info(prof)
+            nchannels, nthreads = get_config()
+            msg = (
+                f"{rank}, "
+                f"{args.framework}, "
+                f"{args.model_name}, "
+                f"{args.batch_size}, "
+                f"{nchannels}, "
+                f"{nthreads:4}, "
+                f"{comp_time:8.3f}, "
+                f"{comm_time:8.3f}, "
+                f"{overlap_time:8.3f}, "
+                f"{cpu_time:8.3f}, "
+                f"{throughput:8.3f}"
+            )
+            print(msg)
+            fout.write(msg + "\n")
 
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser("Benchmark Model", usage="""
+    torchrun torchrun --nproc_per_node 2 model.py -f torch
+    python model.py -f torch -s
+    LOCAL_RANK=0 python model.py -f torch & LOCAL_RANK=1 python model.py -f torch
+    horovodrun -np 2 python model.py -f hvd
+    """)
+    add_worker_args(parser)
+    parser.add_argument("-m", "--model_name", type=str, default="resnet50")
+    parser.add_argument("-f", "--framework", type=str,
+                        default="torch", choices=["torch", "hvd"])
+    parser.add_argument("-b", "--batch_size", type=int, default=32)
+    parser.add_argument("-s", "--spawn", action=argparse.BooleanOptionalAction)
+    args = parser.parse_args()
+    print(args)
+    set_worker_env(args)
+    if args.framework == "torch":
+        if "MASTER_ADDR" not in os.environ:
+            os.environ["MASTER_ADDR"] = "localhost"
+        if "MASTER_PORT" not in os.environ:
+            os.environ["MASTER_PORT"] = "12345"
+
+        if args.spawn:
+            import torch.multiprocessing as mp
+            mp.spawn(main, args=(args,), nprocs=args.world_size)
+        else:
+            if "LOCAL_RANK" not in os.environ:
+                raise ValueError(
+                    "LOCAL_RANK is not set. "
+                    "Run with -s, or torchrun, or set it manually."
+                )
+            rank = int(os.environ["LOCAL_RANK"])
+            main(rank, args)
+    elif args.framework == "hvd":
+        import horovod.torch as hvd
+        hvd.init()
+        rank = hvd.local_rank()
+        main(rank, args)

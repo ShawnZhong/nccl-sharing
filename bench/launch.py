@@ -2,6 +2,8 @@ import argparse
 import os
 import itertools
 
+from tqdm import tqdm
+
 from common import add_common_args
 
 
@@ -27,7 +29,7 @@ def run(file, **kwargs):
     batch_sizes = kwargs.pop("batch_sizes")
     frameworks = kwargs.pop("frameworks")
     combinations = itertools.product(model_names, frameworks, batch_sizes, configs)
-    for model_name, framework, batch_size, config in combinations:
+    for model_name, framework, batch_size, config in tqdm(list(combinations), colour="green"):
         kwargs["model_name"] = model_name
         kwargs["framework"] = framework
         kwargs["batch_size"] = batch_size
@@ -75,9 +77,9 @@ if __name__ == "__main__":
     if "all" in args.frameworks:
         args.frameworks = ["torch", "hvd"]
     if "all" in args.model_names:
-        args.model_names = ["resnet18", "resnet50", "resnet101", "vgg13", "vgg16", "vgg19", "alexnet", "vit_b_16", "vit_b_19"]
+        args.model_names = ["resnet18", "resnet50", "resnet101", "vgg16", "alexnet", "vit_b_16"]
     
-    args.output_dir.mkdir(exist_ok=True)
+    args.output_dir.mkdir(exist_ok=True, parents=True)
     with open(args.output_dir / "args.txt", "w") as f:
         f.write(str(args))
 
