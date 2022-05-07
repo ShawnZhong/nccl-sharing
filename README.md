@@ -19,4 +19,5 @@ nvvp -vm /usr/lib/jvm/java-8-openjdk-amd64/jre/bin/java python main.py
 
 # profile main.py
 nvprof python main.py
+nvprof --profile-child-processes -s -f -o profile-%p.nvvp {cmd}
 ```
