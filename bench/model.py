@@ -49,12 +49,6 @@ def get_config():
     return int(nminchannels), int(nthreads)
 
 
-def add_worker_args(parser):
-    add_common_args(parser)
-    parser.add_argument("-nc", "--nchannels", type=int, default=2)
-    parser.add_argument("-nt", "--nthreads", type=int, default=256)
-
-
 def set_worker_env(args):
     os.environ["NCCL_P2P_DISABLE"] = "1"
     if args.debug:
@@ -68,22 +62,28 @@ def set_worker_env(args):
 
 
 def main(rank, args):
-    torch.cuda.set_device(rank)
-    model = getattr(torchvision.models, args.model_name)().to(rank)
-
     if args.framework == "torch":
         import torch.distributed as dist
         from torch.nn.parallel import DistributedDataParallel as DDP
+
         dist.init_process_group(backend="nccl", rank=rank)
+        torch.cuda.set_device(rank)
+        model = getattr(torchvision.models, args.model_name)().to(rank)
         model = DDP(model)
         optimizer = torch.optim.SGD(model.parameters(), lr=0.01)
     elif args.framework == "hvd":
         import horovod.torch as hvd
+
+        hvd.init()
+        rank = hvd.local_rank()
+        torch.cuda.set_device(rank)
+        model = getattr(torchvision.models, args.model_name)().to(rank)
         optimizer = torch.optim.SGD(model.parameters(), lr=0.01)
         optimizer = hvd.DistributedOptimizer(
             optimizer,
             named_parameters=model.named_parameters()
         )
+
     args.output_dir.mkdir(exist_ok=True, parents=True)
     with open(args.output_dir / "result.csv", "a") as fout:
         data = torch.randn(args.batch_size, 3, 224, 224, device=rank)
@@ -120,12 +120,20 @@ def main(rank, args):
             fout.write(msg + "\n")
 
 
+def add_worker_args(parser):
+    add_common_args(parser)
+    parser.add_argument("-nc", "--nchannels", type=int, default=2)
+    parser.add_argument("-nt", "--nthreads", type=int, default=256)
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser("Benchmark Model", usage="""
-    torchrun torchrun --nproc_per_node 2 model.py -f torch
-    python model.py -f torch -s
-    LOCAL_RANK=0 python model.py -f torch & LOCAL_RANK=1 python model.py -f torch
-    horovodrun -np 2 python model.py -f hvd
+    Using torch.DDP for distributed training:
+        python model.py -f torch --spawn -w 2
+        torchrun torchrun --nproc_per_node 2 model.py -f torch
+        LOCAL_RANK=0 python model.py -f torch & LOCAL_RANK=1 python model.py -f torch
+    Using horovod for distributed training:
+        python model.py -f hvd --spawn -w 2
+        horovodrun -np 2 python model.py -f hvd
     """)
     add_worker_args(parser)
     parser.add_argument("-m", "--model_name", type=str, default="resnet50")
@@ -147,14 +155,13 @@ if __name__ == "__main__":
             mp.spawn(main, args=(args,), nprocs=args.world_size)
         else:
             if "LOCAL_RANK" not in os.environ:
-                raise ValueError(
-                    "LOCAL_RANK is not set. "
-                    "Run with -s, or torchrun, or set it manually."
-                )
+                raise ValueError(f"LOCAL_RANK not set. {parser.format_usage()}")
             rank = int(os.environ["LOCAL_RANK"])
             main(rank, args)
     elif args.framework == "hvd":
-        import horovod.torch as hvd
-        hvd.init()
-        rank = hvd.local_rank()
-        main(rank, args)
+        if args.spawn:
+            import horovod
+
+            horovod.run(main, args=(-1, args,), np=args.world_size)
+        else:
+            main(-1, args)
