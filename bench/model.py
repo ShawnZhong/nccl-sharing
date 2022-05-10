@@ -2,11 +2,6 @@ import os
 import time
 import argparse
 
-import torch
-import torch.nn.functional as F
-from torch.profiler import profile, ProfilerActivity
-import torchvision
-
 from common import add_common_args
 
 
@@ -62,14 +57,20 @@ def set_worker_env(args):
 
 
 def main(rank, args):
+    import torch
+    import torch.nn.functional as F
+    from torch.profiler import profile, ProfilerActivity
+    import torchvision
+
+    model = getattr(torchvision.models, args.model_name)()
+
     if args.framework == "torch":
         import torch.distributed as dist
         from torch.nn.parallel import DistributedDataParallel as DDP
 
         dist.init_process_group(backend="nccl", rank=rank)
         torch.cuda.set_device(rank)
-        model = getattr(torchvision.models, args.model_name)().to(rank)
-        model = DDP(model)
+        model = DDP(model.to(rank))
         optimizer = torch.optim.SGD(model.parameters(), lr=0.01)
     elif args.framework == "hvd":
         import horovod.torch as hvd
@@ -77,7 +78,7 @@ def main(rank, args):
         hvd.init()
         rank = hvd.local_rank()
         torch.cuda.set_device(rank)
-        model = getattr(torchvision.models, args.model_name)().to(rank)
+        model = model.to(rank)
         optimizer = torch.optim.SGD(model.parameters(), lr=0.01)
         optimizer = hvd.DistributedOptimizer(
             optimizer,
@@ -128,12 +129,12 @@ def add_worker_args(parser):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser("Benchmark Model", usage="""
     Using torch.DDP for distributed training:
-        python model.py -f torch --spawn -w 2
-        torchrun torchrun --nproc_per_node 2 model.py -f torch
-        LOCAL_RANK=0 python model.py -f torch & LOCAL_RANK=1 python model.py -f torch
+        python model.py -f torch -w 2
+        torchrun torchrun --nproc_per_node 2 model.py --no-spawn -f torch
+        LOCAL_RANK=0 python model.py --no-spawn -f torch & LOCAL_RANK=1 python model.py --no-spawn -f torch
     Using horovod for distributed training:
-        python model.py -f hvd --spawn -w 2
-        horovodrun -np 2 python model.py -f hvd
+        python model.py -f hvd -w 2
+        horovodrun -np 2 python model.py --no-spawn -f hvd
     """)
     add_worker_args(parser)
     parser.add_argument("-m", "--model_name", type=str, default="resnet50")
@@ -143,6 +144,14 @@ if __name__ == "__main__":
     args = parser.parse_args()
     print(args)
     set_worker_env(args)
+
+    if not args.output_dir.exists():
+        args.output_dir.mkdir(parents=True)
+    result_path = args.output_dir / "result.csv"
+    if not result_path.exists():
+        with open(result_path, "w") as fout:
+            fout.write("rank, framework, model_name, batch_size, nchannels, nthreads, comp_time, comm_time, overlap_time, cpu_time, throughput\n")
+
     if args.framework == "torch":
         if "MASTER_ADDR" not in os.environ:
             os.environ["MASTER_ADDR"] = "localhost"

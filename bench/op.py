@@ -2,75 +2,115 @@ import argparse
 import time
 import os
 
-from torchvision import models
-import torch
-from torch.profiler import profile, ProfilerActivity
-import torch.distributed as dist
 
-from model import get_profiling_info, run_configs, add_common_args, parse_args
+from model import get_profiling_info, get_config, add_worker_args, set_worker_env
 
-comp_dict = {
-    "conv": models.resnet18().layer1[0].conv1,
-    "bn": models.resnet18().layer1[0].bn1,
-    "relu": models.resnet18().layer1[0].relu,
-    "avgpool": models.resnet18().avgpool,
-    "fc": models.resnet18().fc,
-}
+all_ops = ["nop", "conv", "bn", "relu", "avgpool", "fc"]
 
-all_ops = list(comp_dict.keys()) + ["nop"]
+def bench_op(rank, op, args, fout):
+    import torch
+    import torch.nn as nn
+    from torch.profiler import profile, ProfilerActivity
+    import torch.distributed as dist
+
+    comp_dict = {
+        "conv": nn.Conv2d(64, 64, kernel_size=7, stride=2, padding=3, bias=False),
+        "bn": nn.BatchNorm2d(64),
+        "relu": nn.ReLU(inplace=True),
+        "avgpool": nn.AdaptiveAvgPool2d((1, 1)),
+        "fc": nn.Linear(224 * 224, 64),
+    }
+
+    if op != "nop":
+        comp = comp_dict[op].cuda(rank)
+    if op in ["conv", "bn", "relu", "avgpool"]:
+        comp_tensor = torch.zeros(args.batch_size, 64, 224, 224, device=rank)
+    elif op == "fc":
+        comp_tensor = torch.zeros(args.batch_size, 64, 224 * 224, device=rank)
+
+    nchannels, nthreads = get_config()
+    comm_enabled = nchannels != 0 and nthreads != 0
+    if comm_enabled:
+        comm_tensor = torch.zeros(args.comm_size, 1024, 1024, device=rank)
+
+    for i in range(args.niter):
+        with profile(activities=[ProfilerActivity.CUDA]) as perf:
+            start_ts = time.time()
+            if comm_enabled:
+                handle = dist.all_reduce(comm_tensor, async_op=True)
+            if op != "nop":
+                comp(comp_tensor)
+            if comm_enabled:
+                handle.wait()
+            torch.cuda.synchronize(rank)
+            end_ts = time.time()
+        cpu_time = (end_ts - start_ts) * 1e3
+        comp_time, comm_time, overlap_time = get_profiling_info(perf)
+        msg = (
+            f"{rank}, "
+            f"{op:8}, "
+            f"{nchannels}, "
+            f"{nthreads:4}, "
+            f"{comp_time:8.3f}, "
+            f"{comm_time:8.3f}, "
+            f"{overlap_time:8.3f}, "
+            f"{cpu_time:8.3f}"
+        )
+        print(msg)
+        fout.write(msg + "\n")
 
 
-def test(rank, args):
+def main(rank, args):
+    import torch.distributed as dist
+
     dist.init_process_group(
         backend="nccl",
         init_method="tcp://localhost:23456",
         world_size=args.world_size,
         rank=rank
     )
-    comp = comp_dict[args.op].cuda(rank)
-    if args.op in ["conv", "bn", "relu", "avgpool"]:
-        comp_tensor = torch.zeros(256, 64, 224, 224, device=rank)
-    elif args.op == "fc":
-        comp_tensor = torch.zeros(256, 512, device=rank)
 
-    comm_tensor = torch.zeros(100, 1024, 1024, device=rank)
+    with open(args.output_dir / "result.csv", "a") as fout:
+        for op in args.ops:
+            bench_op(rank, op, args, fout)
 
-    for i in range(args.niter):
-        with profile(activities=[ProfilerActivity.CUDA]) as perf:
-            start_ts = time.time()
-            if args.comp_only or args.nchannels == 0 or args.nthreads == 0:
-                comp(comp_tensor)
-            elif args.comm_only:
-                dist.all_reduce(comm_tensor)
-            else:
-                handle = dist.all_reduce(comm_tensor, async_op=True)
-                comp(comp_tensor)
-                handle.wait()
-            torch.cuda.synchronize(rank)
-            end_ts = time.time()
-        if rank == 0 and i == args.niter - 1:
-            cpu_time = (end_ts - start_ts) * 1e3
-            comp_time, comm_time, overlap_time = get_profiling_info(perf)
-            print(
-                f"{args.op:8}, "
-                f"{args.nchannels}, "
-                f"{args.nthreads:4}, "
-                f"{comp_time:8.3f}, "
-                f"{comm_time:8.3f}, "
-                f"{overlap_time:8.3f}, "
-                f"{cpu_time:8.3f}"
-            )
+
+def add_op_args(parser):
+    parser.add_argument(
+        "--ops", nargs="+", 
+        choices=all_ops, 
+        default=all_ops
+    )
+    parser.add_argument(
+        "-bs", "--batch_size", type=int, default=64,
+    )
+    parser.add_argument(
+        "--comm_size", type=int, default=25,
+        help="Communication size in MB"
+    )
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument("--ops", nargs="+", default=all_ops)
-    group = parser.add_mutually_exclusive_group()
-    group.add_argument("--comp_only", action="store_true")
-    group.add_argument("--comm_only", action="store_true")
-    add_common_args(parser)
-    args = parse_args(parser)
-    # os.environ["TORCH_DISTRIBUTED_DEBUG"] = "DETAIL"
-    for op in args.ops:
-        args.op = op
-        run_configs(test, args)
+    add_worker_args(parser)
+    add_op_args(parser)
+    args = parser.parse_args()
+    print(args)
+    set_worker_env(args)
+
+    if not args.output_dir.exists():
+        args.output_dir.mkdir(parents=True)
+    result_path = args.output_dir / "result.csv"
+    if not result_path.exists():
+        with open(result_path, "w") as fout:
+            fout.write(
+                "rank, op, nchannels, nthreads, comp_time, comm_time, overlap_time, cpu_time\n")
+
+    if args.spawn:
+        import torch.multiprocessing as mp
+        mp.spawn(main, args=(args,), nprocs=args.world_size)
+    else:
+        if "LOCAL_RANK" not in os.environ:
+            raise ValueError(f"LOCAL_RANK not set. {parser.format_usage()}")
+        rank = int(os.environ["LOCAL_RANK"])
+        main(rank, args)
