@@ -125,6 +125,7 @@ def add_worker_args(parser):
     add_common_args(parser)
     parser.add_argument("-nc", "--nchannels", type=int, default=2)
     parser.add_argument("-nt", "--nthreads", type=int, default=256)
+    parser.add_argument("--spawn", action=argparse.BooleanOptionalAction, default=True)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser("Benchmark Model", usage="""

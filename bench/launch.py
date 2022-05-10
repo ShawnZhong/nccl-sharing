@@ -60,7 +60,7 @@ def bench_op(configs, ops, log_path, bench, **kwargs):
         kwargs["op"] = op
         kwargs["nchannels"], kwargs["nthreads"] = map(int, config.split(","))
         args = gen_cmd_args(kwargs)
-        system(f"python op.py {args}", log_path)
+        system(f"python op.py {args} --spawn", log_path)
 
 
 if __name__ == "__main__":

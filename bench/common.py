@@ -14,4 +14,3 @@ def add_common_args(parser):
     parser.add_argument("-d", "--debug", action=argparse.BooleanOptionalAction, default=False)
     parser.add_argument("-n", "--niter", type=int, default=5)
     parser.add_argument("-o", "--output_dir", type=Path, default=Path("results")/gen_ts_str())
-    parser.add_argument("--spawn", action=argparse.BooleanOptionalAction, default=True)
