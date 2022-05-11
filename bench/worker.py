@@ -38,17 +38,12 @@ def get_nccl_path():
     return nccl_path
 
 def set_worker_env(args):
-    if "MASTER_ADDR" not in os.environ:
-        os.environ["MASTER_ADDR"] = "localhost"
-    if "MASTER_PORT" not in os.environ:
-        os.environ["MASTER_PORT"] = "12345"
     if not args.p2p:
         os.environ["NCCL_P2P_DISABLE"] = "1"
     if args.debug:
         os.environ["TORCH_CPP_LOG_LEVEL"] = "INFO"
         os.environ["TORCH_DISTRIBUTED_DEBUG"] = "DETAIL"
         os.environ["NCCL_DEBUG"] = "INFO"
-    os.environ["WORLD_SIZE"] = str(args.world_size)
     os.environ["NCCL_MIN_NCHANNELS"] = "8"
     os.environ["NCCL_MAX_NCHANNELS"] = "8"
     os.environ["LD_PRELOAD"] = str(get_nccl_path())

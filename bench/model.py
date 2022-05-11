@@ -104,6 +104,8 @@ if __name__ == "__main__":
     parser.add_argument("-f", "--framework", type=str,
                         default="torch", choices=["torch", "hvd"])
     parser.add_argument("-b", "--batch_size", type=int, default=32)
+    parser.add_argument("--spawn", action=argparse.BooleanOptionalAction, default=True)
+
     args = parser.parse_args()
     print(args)
     set_worker_env(args)
