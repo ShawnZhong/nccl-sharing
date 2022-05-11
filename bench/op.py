@@ -90,12 +90,7 @@ def bench_ops(rank, args, fout):
 
 
 def main(rank, args):
-    dist.init_process_group(
-        backend="nccl",
-        init_method="tcp://localhost:23456",
-        world_size=args.world_size,
-        rank=rank,
-    )
+    dist.init_process_group(backend="nccl", rank=rank)
 
     result_csv = args.output_dir / f"result.csv"
     with open(result_csv, "a") as fout:
@@ -133,7 +128,8 @@ if __name__ == "__main__":
 
     if "all" in args.configs:
         args.configs = ["0,0"]
-        args.configs += [f"{i},{2 ** j}" for i in range(1, 9) for j in range(6, 10)]
+        args.configs += [f"{i},{2 ** j}" for i in range(1, 9)
+                         for j in range(6, 10)]
 
     print(args)
     set_worker_env(args)
@@ -159,7 +155,7 @@ if __name__ == "__main__":
     if args.spawn:
         mp.spawn(main, args=(args,), nprocs=args.world_size)
     else:
-        if "LOCAL_RANK" not in os.environ:
-            raise ValueError(f"LOCAL_RANK not set. {parser.format_usage()}")
-        rank = int(os.environ["LOCAL_RANK"])
+        if "RANK" not in os.environ:
+            raise ValueError(f"RANK not set. {parser.format_usage()}")
+        rank = int(os.environ["RANK"])
         main(rank, args)

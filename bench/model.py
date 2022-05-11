@@ -18,8 +18,6 @@ def get_config():
 
 
 
-
-
 def main(rank, args):
     import torch
     import torch.nn.functional as F
@@ -118,11 +116,6 @@ if __name__ == "__main__":
             fout.write("rank, framework, model_name, batch_size, nchannels, nthreads, comp_time, comm_time, overlap_time, cpu_time, throughput\n")
 
     if args.framework == "torch":
-        if "MASTER_ADDR" not in os.environ:
-            os.environ["MASTER_ADDR"] = "localhost"
-        if "MASTER_PORT" not in os.environ:
-            os.environ["MASTER_PORT"] = "12345"
-
         if args.spawn:
             import torch.multiprocessing as mp
             mp.spawn(main, args=(args,), nprocs=args.world_size)

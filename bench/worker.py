@@ -38,6 +38,10 @@ def get_nccl_path():
     return nccl_path
 
 def set_worker_env(args):
+    if "MASTER_ADDR" not in os.environ:
+        os.environ["MASTER_ADDR"] = "localhost"
+    if "MASTER_PORT" not in os.environ:
+        os.environ["MASTER_PORT"] = "12345"
     if not args.p2p:
         os.environ["NCCL_P2P_DISABLE"] = "1"
     if args.debug:
