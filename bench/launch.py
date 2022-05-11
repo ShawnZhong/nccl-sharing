@@ -30,7 +30,7 @@ def gen_cmd_args(kwargs):
     return " ".join(map(arg_to_str, kwargs.keys(), kwargs.values()))
 
 
-def bench_model(configs, model_names, batch_sizes, frameworks, log_path, bench, **kwargs):
+def bench_model(configs, model_names, batch_sizes, frameworks, log_path, bench, spawn, **kwargs):
     combinations = itertools.product(
         model_names, frameworks, batch_sizes, configs)
     for model_name, framework, batch_size, config in tqdm(list(combinations), colour="green"):
@@ -54,10 +54,8 @@ def bench_model(configs, model_names, batch_sizes, frameworks, log_path, bench, 
             )
 
 
-def bench_op(configs, ops, log_path, bench, **kwargs):
-    combinations = itertools.product(ops, configs)
-    for op, config in tqdm(list(combinations), colour="green"):
-        kwargs["op"] = op
+def bench_op(configs, log_path, bench, spawn, **kwargs):
+    for config in tqdm(configs, colour="green"):
         kwargs["nchannels"], kwargs["nthreads"] = map(int, config.split(","))
         args = gen_cmd_args(kwargs)
         system(f"python op.py {args} --spawn", log_path)
@@ -83,7 +81,6 @@ if __name__ == "__main__":
 
     for subparser in [model_subparser, op_subparser]:
         add_common_args(subparser)
-        subparser.add_argument("-c", "--configs", nargs="+", default=["2,256"])
 
     args = parser.parse_args()
     if hasattr(args, "configs") and "all" in args.configs:

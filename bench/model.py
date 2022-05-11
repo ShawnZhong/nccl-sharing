@@ -5,34 +5,7 @@ import argparse
 from common import add_common_args
 
 
-def get_profiling_info(prof):
-    comm_events = []
-    comp_events = []
 
-    for event in prof.events():
-        if event.cuda_time_total == 0:
-            continue
-        if "nccl" in event.name:
-            comm_events.append(event)
-        else:
-            comp_events.append(event)
-
-    comp_time = sum(e.cuda_time_total for e in comp_events) / 1e3
-    comm_time = sum(e.cuda_time_total for e in comm_events) / 1e3
-
-    overlap_time = 0
-    for comm_event in comm_events:
-        for comp_event in comp_events:
-            if comm_event.time_range.start > comp_event.time_range.end:
-                continue
-            if comm_event.time_range.end < comp_event.time_range.start:
-                continue
-            min_end = min(comm_event.time_range.end, comp_event.time_range.end)
-            max_start = max(comm_event.time_range.start,
-                            comp_event.time_range.start)
-            overlap_time += (min_end - max_start) / 1e3
-
-    return comp_time, comm_time, overlap_time
 
 
 def get_config():
@@ -44,16 +17,7 @@ def get_config():
     return int(nminchannels), int(nthreads)
 
 
-def set_worker_env(args):
-    os.environ["NCCL_P2P_DISABLE"] = "1"
-    if args.debug:
-        os.environ["TORCH_CPP_LOG_LEVEL"] = "INFO"
-        os.environ["TORCH_DISTRIBUTED_DEBUG"] = "DETAIL"
-        os.environ["NCCL_DEBUG"] = "INFO"
-    os.environ["WORLD_SIZE"] = str(args.world_size)
-    os.environ["NCCL_MIN_NCHANNELS"] = str(args.nchannels)
-    os.environ["NCCL_MAX_NCHANNELS"] = str(args.nchannels)
-    os.environ["NCCL_NTHREADS"] = str(args.nthreads)
+
 
 
 def main(rank, args):
@@ -89,7 +53,7 @@ def main(rank, args):
     with open(args.output_dir / "result.csv", "a") as fout:
         data = torch.randn(args.batch_size, 3, 224, 224, device=rank)
         target = torch.randint(0, 1000, (args.batch_size,), device=rank)
-        for i in range(args.niter):
+        for i in range(args.niter + args.nwarmup):
             with profile(activities=[ProfilerActivity.CUDA]) as prof:
                 start_ts = time.time()
                 optimizer.zero_grad()
@@ -99,7 +63,8 @@ def main(rank, args):
                 optimizer.step()
                 torch.cuda.synchronize(rank)
                 end_ts = time.time()
-
+            if i < args.nwarmup:
+                continue
             cpu_time = (end_ts - start_ts) * 1e3
             throughput = args.batch_size / (end_ts - start_ts)
             comp_time, comm_time, overlap_time = get_profiling_info(prof)
@@ -125,7 +90,6 @@ def add_worker_args(parser):
     add_common_args(parser)
     parser.add_argument("-nc", "--nchannels", type=int, default=2)
     parser.add_argument("-nt", "--nthreads", type=int, default=256)
-    parser.add_argument("--spawn", action=argparse.BooleanOptionalAction, default=True)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser("Benchmark Model", usage="""
