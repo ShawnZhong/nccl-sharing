@@ -2,19 +2,19 @@ import argparse
 import time
 import os
 import sys
+import contextlib
 
 import pandas as pd
 
 import torch
 import torch.nn as nn
-from torch.profiler import profile, ProfilerActivity
 import torch.distributed as dist
 import torch.multiprocessing as mp
 
 from common import add_common_args
 from worker import set_worker_env, get_profiling_info
+from plot import plot_op_results
 
-pd.options.display.expand_frame_repr = False
 
 all_ops = ["nop", "conv", "bn", "relu", "avgpool", "fc"]
 
@@ -26,7 +26,14 @@ def bench_op(op, nchannels, nthreads, comp, comp_tensor, comm_tensor, args):
         os.environ["NCCL_LOCAL_NTHREADS"] = str(nthreads)
 
     for i in range(args.niter + args.nwarmup):
-        with profile(activities=[ProfilerActivity.CUDA]) as perf:
+        if args.profile:
+            from torch.profiler import profile, ProfilerActivity
+
+            cm = profile(activities=[ProfilerActivity.CUDA])
+        else:
+            cm = contextlib.nullcontext()
+        torch.cuda.synchronize(args.local_rank)
+        with cm as perf:
             start_ts = time.time()
             if comm_enabled:
                 handle = dist.all_reduce(comm_tensor, async_op=True)
@@ -34,7 +41,7 @@ def bench_op(op, nchannels, nthreads, comp, comp_tensor, comm_tensor, args):
                 comp(comp_tensor)
             if comm_enabled:
                 handle.wait()
-            torch.cuda.synchronize()
+            torch.cuda.synchronize(args.local_rank)
             end_ts = time.time()
         if i < args.nwarmup:
             continue
@@ -113,19 +120,7 @@ def main(local_rank, args):
         bench_ops(args)
 
     if local_rank == 0:
-        files = args.output_dir.glob("*.csv")
-        df = pd.concat(
-            [pd.read_csv(f, sep="\t") for f in files], ignore_index=True, sort=False
-        )
-        print(
-            df.pivot_table(
-                index=["op", "nchannels"],
-                columns="nthreads",
-                values=["comp_time", "comm_time"],
-                aggfunc="median",
-                sort=False,
-            ).reindex(["comp_time", "comm_time"], axis=1, level=0)
-        )
+        plot_op_results(args.output_dir)
 
 
 if __name__ == "__main__":
@@ -135,10 +130,10 @@ if __name__ == "__main__":
         "--ops", nargs="+", choices=all_ops + ["all"], default=["all"],
     )
     parser.add_argument(
-        "--bs", "--batch_size", dest="batch_size", type=int, default=64,
+        "-bs", "--batch_size", type=int, default=64,
     )
     parser.add_argument(
-        "--comm_size", type=int, default=300, help="Communication size in MB"
+        "-cs", "--comm_size", type=int, default=300, help="Communication size in MB"
     )
     args = parser.parse_args()
 
@@ -147,7 +142,7 @@ if __name__ == "__main__":
 
     if "all" in args.configs:
         args.configs = ["0,0"]
-        args.configs += [f"{i},{2 ** j}" for i in range(1, 9) for j in range(6, 10)]
+        args.configs += [f"{i},{j}" for i in range(1, 17) for j in range(32, 640 + 32, 32)]
 
     print(args)
     set_worker_env(args)

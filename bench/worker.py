@@ -2,6 +2,9 @@ from pathlib import Path
 import os
 
 def get_profiling_info(prof):
+    if prof is None:
+        return 0, 0, 0
+    
     comm_events = []
     comp_events = []
 
@@ -44,6 +47,6 @@ def set_worker_env(args):
         os.environ["TORCH_CPP_LOG_LEVEL"] = "INFO"
         os.environ["TORCH_DISTRIBUTED_DEBUG"] = "DETAIL"
         os.environ["NCCL_DEBUG"] = "INFO"
-    os.environ["NCCL_MIN_NCHANNELS"] = "8"
-    os.environ["NCCL_MAX_NCHANNELS"] = "8"
+    os.environ["NCCL_MIN_NCHANNELS"] = str(args.max_nc)
+    os.environ["NCCL_MAX_NCHANNELS"] = str(args.max_nc)
     os.environ["LD_PRELOAD"] = str(get_nccl_path())

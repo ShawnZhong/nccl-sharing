@@ -27,6 +27,14 @@ sudo PATH=$PATH /usr/local/cuda/bin/nvprof \
     --devices 0 \
     --profile-child-processes \
     --metrics inst_per_warp,inst_executed,ipc \
+    -o result-%p.nvvp \
     --print-gpu-trace \
     python launch.py op --op nop -c 1,256 2,128 2,256 -n 1 --comm_size 1
+```
+
+```sh
+sudo PATH=$PATH /usr/local/cuda/bin/nvprof \
+    --profile-child-processes \
+    -o result-%p.nvvp \
+    python {args}
 ```
