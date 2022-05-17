@@ -1,19 +1,13 @@
-import os
-import time
 import argparse
 import sys
-
-from utils import (
-    add_common_args,
-    setup_args,
-    get_profiling_info,
-    init_torch_dist,
-)
+import time
 
 import torch
-import torchvision
 import torch.nn.functional as F
-from torch.profiler import profile, ProfilerActivity
+import torchvision
+
+from args import add_common_args, setup_args
+from utils import get_profiling_info, init_torch_dist, get_profiler, set_config_env
 
 
 def get_model_and_optimizer(framework, model_name, rank):
@@ -47,8 +41,9 @@ def bench_model(
     nthreads,
     fout,
 ):
+    set_config_env(nchannels, nthreads)
     for i in range(args.niter + args.nwarmup):
-        with profile(activities=[ProfilerActivity.CUDA]) as prof:
+        with get_profiler(args) as prof:
             start_ts = time.time()
             optimizer.zero_grad()
             output = model(data)

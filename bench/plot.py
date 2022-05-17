@@ -7,6 +7,7 @@ pd.options.display.max_rows = None
 pd.options.display.max_columns = None
 pd.options.display.precision = 2
 
+
 def plot_op_results(output_dir):
     assert output_dir.is_dir()
     files = output_dir.glob("*.csv")
@@ -22,6 +23,7 @@ def plot_op_results(output_dir):
             sort=False,
         ).reindex(["comp_time", "comm_time"], axis=1, level=0)
     )
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()

@@ -1,20 +1,14 @@
 import argparse
 import time
-import os
 import sys
-import contextlib
 
 import torch
 import torch.nn as nn
 import torch.distributed as dist
 import torch.multiprocessing as mp
 
-from utils import (
-    add_common_args,
-    setup_args,
-    get_profiling_info,
-    init_torch_dist,
-)
+from utils import get_profiling_info, init_torch_dist, get_profiler, set_config_env
+from args import add_common_args, setup_args
 from plot import plot_op_results
 
 
@@ -24,18 +18,10 @@ all_ops = ["nop", "conv", "bn", "relu", "avgpool", "fc"]
 def bench_op(op, nchannels, nthreads, comp, comp_tensor, comm_tensor, fout, args):
     comm_enabled = nchannels != 0 and nthreads != 0
     if comm_enabled:
-        os.environ["NCCL_LOCAL_NCHANNELS"] = str(nchannels)
-        os.environ["NCCL_LOCAL_NTHREADS"] = str(nthreads)
+        set_config_env(nchannels, nthreads)
 
     for i in range(args.niter + args.nwarmup):
-        if args.profile:
-            from torch.profiler import profile, ProfilerActivity
-
-            cm = profile(activities=[ProfilerActivity.CUDA])
-        else:
-            cm = contextlib.nullcontext()
-        torch.cuda.synchronize(args.local_rank)
-        with cm as perf:
+        with get_profiler(args) as perf:
             start_ts = time.time()
             if comm_enabled:
                 handle = dist.all_reduce(comm_tensor, async_op=True)
