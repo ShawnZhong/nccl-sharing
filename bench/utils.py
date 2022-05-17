@@ -13,10 +13,13 @@ def get_profiling_info(prof):
     if prof is None:
         return 0, 0, 0
 
+    import torch
+
     comm_events = []
     comp_events = []
 
     for event in prof.events():
+        event: torch.autograd.profiler.FunctionEvent
         if event.cuda_time_total == 0:
             continue
         if "nccl" in event.name:

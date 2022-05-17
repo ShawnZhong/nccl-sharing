@@ -1,16 +1,14 @@
 import argparse
-import time
 import sys
+import time
 
 import torch
-import torch.nn as nn
 import torch.distributed as dist
 import torch.multiprocessing as mp
+import torch.nn as nn
 
-from utils import get_profiling_info, init_torch_dist, get_profiler, set_config_env
 from args import add_common_args, setup_args
-from plot import plot_op_results
-
+from utils import get_profiling_info, init_torch_dist, get_profiler, set_config_env
 
 all_ops = ["nop", "conv", "bn", "relu", "avgpool", "fc"]
 
@@ -98,6 +96,8 @@ def main(local_rank, args):
         bench_ops(args, fout)
 
     if local_rank == 0:
+        from plot import plot_op_results
+
         plot_op_results(args.output_dir)
 
 

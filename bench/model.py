@@ -29,17 +29,17 @@ def get_model_and_optimizer(framework, model_name, rank):
 
 
 def bench_model(
-    rank,
-    args,
-    model_name,
-    model,
-    optimizer,
-    batch_size,
-    data,
-    target,
-    nchannels,
-    nthreads,
-    fout,
+        rank,
+        args,
+        model_name,
+        model,
+        optimizer,
+        batch_size,
+        data,
+        target,
+        nchannels,
+        nthreads,
+        fout,
 ):
     set_config_env(nchannels, nthreads)
     for i in range(args.niter + args.nwarmup):
@@ -126,6 +126,11 @@ def main(rank, args):
             flush=True,
         )
         bench_models(rank, args, fout)
+
+    if rank == 0:
+        from plot import plot_bench_results
+
+        plot_bench_results(args.output_dir)
 
 
 if __name__ == "__main__":

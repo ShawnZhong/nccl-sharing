@@ -1,11 +1,9 @@
-import os
 import argparse
-import time
+import os
 import platform
-from pathlib import Path
+import time
 from itertools import product
-
-from numpy import require
+from pathlib import Path
 
 
 def get_nccl_path():
