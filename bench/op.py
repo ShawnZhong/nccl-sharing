@@ -4,22 +4,24 @@ import os
 import sys
 import contextlib
 
-import pandas as pd
-
 import torch
 import torch.nn as nn
 import torch.distributed as dist
 import torch.multiprocessing as mp
 
-from common import add_common_args
-from worker import set_worker_env, get_profiling_info
+from utils import (
+    add_common_args,
+    setup_args,
+    get_profiling_info,
+    init_torch_dist,
+)
 from plot import plot_op_results
 
 
 all_ops = ["nop", "conv", "bn", "relu", "avgpool", "fc"]
 
 
-def bench_op(op, nchannels, nthreads, comp, comp_tensor, comm_tensor, args):
+def bench_op(op, nchannels, nthreads, comp, comp_tensor, comm_tensor, fout, args):
     comm_enabled = nchannels != 0 and nthreads != 0
     if comm_enabled:
         os.environ["NCCL_LOCAL_NCHANNELS"] = str(nchannels)
@@ -47,7 +49,7 @@ def bench_op(op, nchannels, nthreads, comp, comp_tensor, comm_tensor, args):
             continue
         cpu_time = (end_ts - start_ts) * 1e3
         comp_time, comm_time, overlap_time = get_profiling_info(perf)
-        for file in [args.fout, sys.stdout]:
+        for file in [fout, sys.stdout]:
             print(
                 args.global_rank,
                 op,
@@ -63,7 +65,7 @@ def bench_op(op, nchannels, nthreads, comp, comp_tensor, comm_tensor, args):
             )
 
 
-def bench_ops(args):
+def bench_ops(args, fout):
     comp_dict = {
         "conv": nn.Conv2d(64, 64, kernel_size=7, stride=2, padding=3, bias=False),
         "bn": nn.BatchNorm2d(64),
@@ -72,16 +74,13 @@ def bench_ops(args):
         "fc": nn.Linear(224 * 224, 64),
     }
 
-    torch.cuda.set_device(args.local_rank)
-
-    comm_tensor = torch.zeros(args.comm_size, 1024, 1024).cuda()
+    comm_tensor = torch.zeros(args.comm_size, 1024, 1024, device="cuda")
     for op in args.ops:
         comp = comp_dict[op].cuda() if op != "nop" else None
-        comp_tensor = torch.zeros(args.batch_size, 64, 224, 224).cuda()
+        comp_tensor = torch.zeros(args.batch_size, 64, 224, 224, device="cuda")
         if op == "fc":
             comp_tensor = comp_tensor.reshape(args.batch_size, 64, -1)
-        for config in args.configs:
-            nchannels, nthreads = map(int, config.split(","))
+        for nchannels, nthreads in args.configs:
             bench_op(
                 op=op,
                 nchannels=nchannels,
@@ -89,19 +88,13 @@ def bench_ops(args):
                 comp=comp,
                 comp_tensor=comp_tensor,
                 comm_tensor=comm_tensor,
+                fout=fout,
                 args=args,
             )
 
 
 def main(local_rank, args):
-    args.local_rank = local_rank
-    args.global_rank = args.group_rank * args.nprocs + local_rank
-    dist.init_process_group(
-        backend="nccl",
-        init_method=f"tcp://{args.master_addr}",
-        world_size=args.nnodes * args.nprocs,
-        rank=args.global_rank,
-    )
+    init_torch_dist(local_rank, args)
     with open(args.output_dir / f"result-{args.global_rank}.csv", "a") as fout:
         print(
             "rank",
@@ -116,8 +109,7 @@ def main(local_rank, args):
             file=fout,
             flush=True,
         )
-        args.fout = fout
-        bench_ops(args)
+        bench_ops(args, fout)
 
     if local_rank == 0:
         plot_op_results(args.output_dir)
@@ -126,28 +118,30 @@ def main(local_rank, args):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     add_common_args(parser)
+    parser.set_defaults(configs=["0,0", "1-4,64", "1-4,128", "1-4,256", "1-4,512"])
     parser.add_argument(
-        "--ops", nargs="+", choices=all_ops + ["all"], default=["all"],
+        "--ops",
+        nargs="+",
+        choices=all_ops,
+        default=all_ops,
+        help="operations to benchmark",
     )
     parser.add_argument(
-        "-bs", "--batch_size", type=int, default=64,
+        "-bs",
+        "--batch_size",
+        type=int,
+        default=64,
+        help="the local batch size for each op",
     )
     parser.add_argument(
-        "-cs", "--comm_size", type=int, default=300, help="Communication size in MB"
+        "-cs",
+        "--comm_size",
+        type=int,
+        default=300,
+        help="the size of NCCL AllReduce tensor",
     )
     args = parser.parse_args()
 
-    if "all" in args.ops:
-        args.ops = all_ops
-
-    if "all" in args.configs:
-        args.configs = ["0,0"]
-        args.configs += [f"{i},{j}" for i in range(1, 17) for j in range(32, 640 + 32, 32)]
-
-    print(args)
-    set_worker_env(args)
-
-    if not args.output_dir.exists():
-        args.output_dir.mkdir(parents=True, exist_ok=True)
+    setup_args(args)
 
     mp.spawn(main, args=(args,), nprocs=args.nprocs)
