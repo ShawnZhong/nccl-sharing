@@ -1,4 +1,4 @@
-# nccl-sched
+# nccl-sharing
  
 # Commands
 
